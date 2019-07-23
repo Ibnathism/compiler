@@ -2331,3 +2331,248 @@ Found in ScopeTable #3 at position 1 , 2
 Found in ScopeTable #2 at position 0 , 0
 Found in ScopeTable #2 at position 0 , 0
 ScopeTable with id 3 removed
+New ScopeTable with id 2 created
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+New ScopeTable with id 3 created
+ScopeTable with id 3 removed
+New ScopeTable with id 2 created
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+New ScopeTable with id 3 created
+ScopeTable with id 3 removed
+Found in ScopeTable #2 at position 5 , 0
+Found in ScopeTable #2 at position 5 , 0
+New ScopeTable with id 3 created
+Found in ScopeTable #3 at position 1 , 1
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+ScopeTable with id 3 removed
+New ScopeTable with id 2 created
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+New ScopeTable with id 3 created
+ScopeTable with id 3 removed
+Found in ScopeTable #2 at position 5 , 0
+Found in ScopeTable #2 at position 5 , 0
+New ScopeTable with id 3 created
+Found in ScopeTable #3 at position 1 , 1
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+ScopeTable with id 3 removed
+New ScopeTable with id 2 created
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+New ScopeTable with id 3 created
+ScopeTable with id 3 removed
+Found in ScopeTable #2 at position 5 , 0
+Found in ScopeTable #2 at position 5 , 0
+New ScopeTable with id 3 created
+Found in ScopeTable #3 at position 1 , 1
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+ScopeTable with id 3 removed
+New ScopeTable with id 2 created
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+New ScopeTable with id 3 created
+ScopeTable with id 3 removed
+Found in ScopeTable #2 at position 5 , 0
+Found in ScopeTable #2 at position 5 , 0
+New ScopeTable with id 3 created
+Found in ScopeTable #3 at position 1 , 1
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+ScopeTable with id 3 removed
+New ScopeTable with id 2 created
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+New ScopeTable with id 3 created
+ScopeTable with id 3 removed
+Found in ScopeTable #2 at position 5 , 0
+Found in ScopeTable #2 at position 5 , 0
+New ScopeTable with id 3 created
+Found in ScopeTable #3 at position 1 , 1
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+ScopeTable with id 3 removed
+New ScopeTable with id 2 created
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+New ScopeTable with id 3 created
+ScopeTable with id 3 removed
+Found in ScopeTable #2 at position 5 , 0
+Found in ScopeTable #2 at position 5 , 0
+New ScopeTable with id 3 created
+Found in ScopeTable #3 at position 1 , 1
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 0 , 0
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #3 at position 1 , 2
+Found in ScopeTable #2 at position 0 , 0
+Found in ScopeTable #2 at position 0 , 0
+ScopeTable with id 3 removed

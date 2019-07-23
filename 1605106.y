@@ -94,20 +94,29 @@ program: program unit {
 unit: var_declaration { 
 	fprintf(parser, "At line no : %d unit : var_declaration\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+
 	$<symbol>$ -> setName($<symbol>1 -> getName()+"\n");
+
+	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+	
 }
 | func_declaration {
 	fprintf(parser, "At line no : %d unit : func_declaration\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + "\n");
+
+	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+	
 }
 | func_definition {
 	fprintf(parser, "At line no : %d unit : func_definition\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + "\n");
+
+	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+	
 }
 ;
 
@@ -126,6 +135,7 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 					fprintf(errorFile, "Error at Line %d : Type Mismatch \n\n",lines);
 
 					errors++;
+
 					break;
 				}
 			}
@@ -141,8 +151,10 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 		}
 		else {
 
-			errors++;
+		
 			fprintf(errorFile, "Error at Line %d : Parameter size doesn't match \n\n",lines);
+
+			errors++;
 		}
 
 	}
@@ -260,10 +272,6 @@ func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 			//the function must set defined
 			temp -> getFunction() -> setDefined();
 
-
-
-
-
 			
 		}
 		
@@ -300,12 +308,13 @@ func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 
 | type_specifier ID LPAREN RPAREN {
 	$<symbol>$ = new SymbolInfo();
-	SymbolInfo *temp = table -> lookUp($<symbol>2 -> getName());
+	string name = $<symbol>2 -> getName();
+	SymbolInfo *temp = table -> lookUp(name);
 
 	if(temp == 0){
-		table -> insert($<symbol>2 -> getName(), "ID", "Function");
+		table -> insert(name, "ID", "Function");
 		
-		temp = table -> lookUp($<symbol>2 -> getName());
+		temp = table -> lookUp(name);
 		
 		temp -> setFunction();
 		temp -> getFunction() -> setDefined();
@@ -356,52 +365,75 @@ func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 parameter_list: parameter_list COMMA type_specifier ID {
 	fprintf(parser, "At line no : %d parameter_list : parameter_list COMMA type_specifier ID\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s,%s %s\n\n", $<symbol>1 -> getName().c_str(), $<symbol>3 -> getName().c_str(), $<symbol>4 -> getName().c_str());
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + "," + $<symbol>3 -> getName() + " " + $<symbol>4 -> getName());
+
+	fprintf(parser, "%s,%s %s\n\n", $<symbol>1 -> getName().c_str(), $<symbol>3 -> getName().c_str(), $<symbol>4 -> getName().c_str());
+	
 }
 | parameter_list COMMA type_specifier {
 	fprintf(parser, "At line no : %d parameter_list : parameter_list COMMA type_specifier\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s,%s\n\n", $<symbol>1 -> getName().c_str(), $<symbol>3 -> getName().c_str());
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + "," + $<symbol>3 -> getName());
+
+	fprintf(parser, "%s,%s\n\n", $<symbol>1 -> getName().c_str(), $<symbol>3 -> getName().c_str());
+	
 }
 | type_specifier ID {
 	fprintf(parser, "At line no : %d parameter_list : type_specifier ID\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s %s\n\n", $<symbol>1 -> getName().c_str(), $<symbol>2 -> getName().c_str());
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + " " + $<symbol>2 -> getName());
+
+	fprintf(parser, "%s %s\n\n", $<symbol>1 -> getName().c_str(), $<symbol>2 -> getName().c_str());
+	
 }
 | type_specifier {
 	fprintf(parser, "At line no : %d parameter_list : type_specifier\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + " ");
+
+	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+	
 }
 ;
 
 compound_statement: LCURL {
 	table -> enterScope(7);
-	for(int i=0; i<parameters.size(); i++){
+	int limit = parameters.size();
+	for(int i=0; i < limit; i++){
 		table -> insert(parameters[i]->getName(), "ID", parameters[i] -> getDeclaration());
 	}
 	parameters.clear();
 } statements RCURL {
 	fprintf(parser, "At line no : %d compound_statement : LCURL statements RCURL\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "{\n%s\n}\n\n", $<symbol>3 -> getName().c_str());
+
 	$<symbol>$ -> setName("{\n" + $<symbol>3 -> getName() + "\n}");
+
+	fprintf(parser, "{\n%s\n}\n\n", $<symbol>3 -> getName().c_str());
+	
 	//table -> printAllScopeTables();
 	table -> exitScope();
 }
 | LCURL RCURL {
 	table -> enterScope(7);
-	for(int i=0; i<parameters.size(); i++){
-		table -> insert(parameters[i]->getName(), "ID", parameters[i] -> getDeclaration());
+	int limit = parameters.size();
+
+	for(int i=0; i < limit; i++){
+		string dec = parameters[i] -> getDeclaration();
+		string name = parameters[i]->getName();
+		table -> insert(name, "ID", dec);
 	}
 	parameters.clear();
 	fprintf(parser, "At line no : %d compound_statement : LCURL RCURL\n\n", lines);
-	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "{}\n\n");
+
+	$<symbol>$ = new SymbolInfo();
+	
 	$<symbol>$ -> setName("{}");
 	//table -> printAllScopeTables();
 	table -> exitScope();
@@ -413,7 +445,8 @@ var_declaration: type_specifier declaration_list SEMICOLON {
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "%s %s;\n\n", $<symbol>1->getName().c_str(), $<symbol>2->getName().c_str());
 	string name = $<symbol>1 -> getName();
-	if(name == "void "){
+	string v = "void "
+	if(name == v){
 		
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
 
@@ -457,102 +490,145 @@ var_declaration: type_specifier declaration_list SEMICOLON {
 type_specifier: INT {
 	fprintf(parser, "At line no : %d type_specifier : INT\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "int \n\n");
 	$<symbol>$ -> setName("int ");
+
+	fprintf(parser, "int \n\n");
+	
 }
 | FLOAT {
 	fprintf(parser, "At line no : %d type_specifier : FLOAT\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "float \n\n");
+
 	$<symbol>$ -> setName("float ");
+	fprintf(parser, "float \n\n");
+	
 }
 | VOID {
 	fprintf(parser, "At line no : %d type_specifier : VOID \n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "void \n\n");
+
 	$<symbol>$ -> setName("void ");
+	fprintf(parser, "void \n\n");
+	
 }
 ;
 
 declaration_list: declaration_list COMMA ID {
 	fprintf(parser, "At line no : %d declaration_list : declaration_list COMMA ID\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s,%s\n\n", $<symbol>1->getName().c_str(), $<symbol>3->getName().c_str());
-	declarations.push_back(new SymbolInfo($<symbol>3 -> getName(), "ID"));
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + "," + $<symbol>3 -> getName());
+
+	fprintf(parser, "%s,%s\n\n", $<symbol>1->getName().c_str(), $<symbol>3->getName().c_str());
+
+	declarations.push_back(new SymbolInfo($<symbol>3 -> getName(), "ID"));
+	
 }
 | declaration_list COMMA ID LTHIRD CONST_INT RTHIRD {
 	fprintf(parser, "At line no : %d declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s,%s[%s]\n\n", $<symbol>1 -> getName().c_str(), $<symbol>3 -> getName().c_str(), $<symbol>5 -> getName().c_str());
-	declarations.push_back(new SymbolInfo($<symbol>3 -> getName(), "IDa"));
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + "," + $<symbol>3 -> getName() + "[" + $<symbol>5 -> getName() + "]");
+
+	fprintf(parser, "%s,%s[%s]\n\n", $<symbol>1 -> getName().c_str(), $<symbol>3 -> getName().c_str(), $<symbol>5 -> getName().c_str());
+	
+	declarations.push_back(new SymbolInfo($<symbol>3 -> getName(), "IDa"));
+	
 }
 | ID {
 	fprintf(parser, "At line no : %d declaration_list : ID\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s\n\n", $<symbol>1->getName().c_str());
-	declarations.push_back(new SymbolInfo($<symbol>1 -> getName(), "ID"));
+
 	$<symbol>$ -> setName($<symbol>1 -> getName());
+
+	fprintf(parser, "%s\n\n", $<symbol>1->getName().c_str());
+
+	declarations.push_back(new SymbolInfo($<symbol>1 -> getName(), "ID"));
+	
 }
 | ID LTHIRD CONST_INT RTHIRD {
 	fprintf(parser, "At line no : %d declaration_list : ID LTHIRD CONST_INT RTHIRD\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s[%s]\n\n", $<symbol>1 -> getName().c_str(), $<symbol>3 -> getName().c_str());
-	declarations.push_back(new SymbolInfo($<symbol>3 -> getName(), "IDa"));
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + "[" + $<symbol>3 -> getName() + "]");
+
+	fprintf(parser, "%s[%s]\n\n", $<symbol>1 -> getName().c_str(), $<symbol>3 -> getName().c_str());
+
+	declarations.push_back(new SymbolInfo($<symbol>3 -> getName(), "IDa"));
+	
 }
 ;
 
 statements: statement {
 	fprintf(parser, "At line no : %d statements : statement\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());	
+
 	$<symbol>$ -> setName($<symbol>1 -> getName());
+
+	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());	
+	
 }
 | statements statement {
 	fprintf(parser, "At line no : %d statements : statements statement\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s \n%s\n\n", $<symbol>1 -> getName().c_str(), $<symbol>2 -> getName().c_str());
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + "\n" + $<symbol>2 -> getName());
+
+	fprintf(parser, "%s \n%s\n\n", $<symbol>1 -> getName().c_str(), $<symbol>2 -> getName().c_str());
+	
 }
 ;
 
 statement: var_declaration {
 	fprintf(parser, "At line no : %d statement : var_declaration\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+
 	$<symbol>$ -> setName($<symbol>1 -> getName());
+
+	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+	
 }
 | expression_statement {
 	fprintf(parser, "At line no : %d statement : expression_statement\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+
 	$<symbol>$ -> setName($<symbol>1 -> getName());
+
+	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+	
 }
 | compound_statement {
 	fprintf(parser, "At line no : %d statement : compound_statement\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+
 	$<symbol>$ -> setName($<symbol>1 -> getName());
+
+	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
+	
 }
 | FOR LPAREN expression_statement expression_statement expression RPAREN statement {
 	fprintf(parser, "At line no : %d statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "for(%s %s %s)\n%s\n", $<symbol>3 -> getName().c_str(), $<symbol>4 -> getName().c_str(), $<symbol>5 -> getName().c_str(), $<symbol>7 -> getName().c_str());
-	if($<symbol>3 -> getDeclaration() == "void "){
-		errors++;
+	string v = "void ";
+	if($<symbol>3 -> getDeclaration() == v){
+		
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
+
+		errors++;
 	}
 	$<symbol>$ -> setName("for(" + $<symbol>3 -> getName()+$<symbol>4 -> getName()+$<symbol>5 -> getName()+")" + "\n" + $<symbol>7 -> getName());
 }
 | IF LPAREN expression RPAREN statement %prec AFTER_ELSE {
 	fprintf(parser, "At line no : %d statement : IF LPAREN expression RPAREN statement\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
+	string v = "void ";
 	fprintf(parser, "if(%s)\n %s \n\n", $<symbol>3 -> getName().c_str(), $<symbol>5 -> getName().c_str());
-	if($<symbol>3 -> getDeclaration() == "void "){
-		errors++;
+	if($<symbol>3 -> getDeclaration() == v){
+		
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
+
+		errors++;
 	}
 	$<symbol>$ -> setName("if(" + $<symbol>3 -> getName()+ ")" + "\n" + $<symbol>5 -> getName());
 
@@ -561,9 +637,15 @@ statement: var_declaration {
 	fprintf(parser, "At line no : %d statement : IF LPAREN expression RPAREN statement ELSE statement\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "if(%s)\n%s\n else \n %s \n\n", $<symbol>3 -> getName().c_str(), $<symbol>5 -> getName().c_str(), $<symbol>7 -> getName().c_str());
-	if($<symbol>3 -> getDeclaration() == "void "){
-		errors++;
+	
+	string v = "void ";
+	string dec = $<symbol>3 -> getDeclaration();
+
+	if(dec == v){
+		
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
+
+		errors++;
 	}
 	$<symbol>$ -> setName("if(" + $<symbol>3 -> getName()+ ")" + "\n" + $<symbol>5 -> getName() + "\n" + "else" + "\n" + $<symbol>7 -> getName());
 }
@@ -571,26 +653,40 @@ statement: var_declaration {
 	fprintf(parser, "At line no : %d statement : WHILE LPAREN expression RPAREN statement\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "while(%s)\n %s \n\n", $<symbol>3 -> getName().c_str(), $<symbol>5 -> getName().c_str());
-	if($<symbol>3 -> getDeclaration() == "void "){
-		errors++;
+	string v = "void ";
+	string dec = $<symbol>3 -> getDeclaration();
+	if(dec == v){
+		
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
+
+		errors++;
 	}
 	$<symbol>$ -> setName("while(" + $<symbol>3 -> getName()+ ")" + "\n" + $<symbol>5 -> getName());
 }
 | PRINTLN LPAREN ID RPAREN SEMICOLON {
 	fprintf(parser, "At line no : %d statement : PRINTLN LPAREN ID RPAREN SEMICOLON\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
-	fprintf(parser, "\n (%s); \n\n", $<symbol>3 -> getName().c_str());
+	
 	$<symbol>$ -> setName("\n(" + $<symbol>3 -> getName()+ ")" + ";");
+
+	fprintf(parser, "\n (%s); \n\n", $<symbol>3 -> getName().c_str());
+	
 }
 | RETURN expression SEMICOLON {
 	fprintf(parser, "At line no : %d statement : RETURN expression SEMICOLON\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "return %s;\n\n", $<symbol>2 -> getName().c_str());
-	if($<symbol>2 -> getDeclaration() == "void "){
-		errors++;
-		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
+	string dec = $<symbol>2 -> getDeclaration();
+	string v == "void "
+	if(dec == v){
+
 		$<symbol>$ -> setDeclaration("void ");
+
+		
+		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
+
+		errors++;
+		
 	}
 	$<symbol>$ -> setName("return " + $<symbol>2 -> getName()+ ";");
 }
@@ -704,15 +800,24 @@ expression: logic_expression {
 	fprintf(parser, "At line no : %d expression : variable ASSIGNOP logic_expression\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "%s=%s\n\n", $<symbol>1 -> getName().c_str(), $<symbol>3 -> getName().c_str());
-	if($<symbol>3 -> getDeclaration() == "void"){
-		errors++;
+	string v = "void ";
+	string i = "int ";
+	string dec = $<symbol>3 -> getDeclaration();
+
+	if(dec == v){
+		$<symbol>$ -> setDeclaration(i);
+		
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
-		$<symbol>$ -> setDeclaration("int ");
+		
+		errors++;
+		
 	}
 	else if(table -> lookUp($<symbol>1 -> getName()) != 0){
 		if(table -> lookUp($<symbol>1 -> getName())-> getDeclaration() != $<symbol>3 -> getDeclaration()){
-			errors++;
+			
 			fprintf(errorFile,"Error at Line %d : Type mismatch\n\n",lines);
+
+			errors++;
 		}
 	}
 	$<symbol>$ -> setName($<symbol>1 -> getName()+"=" + $<symbol>3 -> getName());
@@ -773,17 +878,18 @@ simple_expression: term {
 	fprintf(parser, "%s%s%s\n\n", $<symbol>1->getName().c_str(), $<symbol>2->getName().c_str(), $<symbol>3->getName().c_str());
 	string f = "float ";
 	string v = "void ";
+	string i = "int ";
 	if($<symbol>3->getDeclaration() == f || $<symbol>1->getDeclaration() == f ) {
 		$<symbol>$ -> setDeclaration(f);
 	}
 	else if($<symbol>3->getDeclaration() == v || $<symbol>1->getDeclaration() == v) {
-		$<symbol>$ -> setDeclaration("int ");
+		$<symbol>$ -> setDeclaration(i);
 		fprintf(errorFile,"Error at Line %d : Type mismatch\n\n",lines);
 		
 
 		errors++;
 	}
-	else $<symbol>$ -> setDeclaration("int ");
+	else $<symbol>$ -> setDeclaration(i);
 	$<symbol>$ -> setName($<symbol>1 -> getName()+ $<symbol>2->getName()+ $<symbol>3->getName().c_str());
 }
 ;
@@ -792,22 +898,32 @@ term: unary_expression {
 	fprintf(parser, "At line no : %d term : unary_expression\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "%s\n\n", $<symbol>1->getName().c_str());
-	$<symbol>$ -> setDeclaration($<symbol>1 ->getDeclaration());
+	string dec = $<symbol>1 ->getDeclaration();
+	$<symbol>$ -> setDeclaration(dec);
 	$<symbol>$ -> setName($<symbol>1 -> getName());
 }
 | term MULOP unary_expression {
 	fprintf(parser, "At line no : %d term : term MULOP unary_expression\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
+	string v = "void ";
+	string i = "int ";
+	string f = "float ";
+	string dec1 = $<symbol>1->getDeclaration();
+	string dec3 = $<symbol>3->getDeclaration();
 	fprintf(parser, "%s%s%s\n\n", $<symbol>1->getName().c_str(), $<symbol>2->getName().c_str(), $<symbol>3->getName().c_str());
-	if($<symbol>1->getDeclaration() == "void " || $<symbol>3->getDeclaration() == "void ") {
-		errors++;
+	if(dec1 == v || dec3 == v) {
+
+		$<symbol>$ -> setDeclaration(i);
+	
 		fprintf(errorFile,"Error at Line %d : Type mismatch\n\n",lines);
-		$<symbol>$ -> setDeclaration("int ");
+		
+
+		errors++;
 	}
 	else if($<symbol>2 -> getName() == "/"){
-		if($<symbol>1->getDeclaration() == "int " && $<symbol>3->getDeclaration() == "int ")
-			$<symbol>$ -> setDeclaration("int ");
-		else $<symbol>$ -> setDeclaration("float ");
+		if(dec1 == i && dec3 == "int ")
+			$<symbol>$ -> setDeclaration(i);
+		else $<symbol>$ -> setDeclaration(f);
 	}
 	else if($<symbol>2 -> getName() == "%"){
 		if($<symbol>1->getDeclaration() != "int " || $<symbol>3->getDeclaration() != "int ") {
@@ -992,23 +1108,15 @@ arguments: arguments COMMA logic_expression {
 	fprintf(parser, "At line no : %d arguments : logic_expression\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "%s\n\n",$<symbol>1->getName().c_str());
-	arguments.push_back(new SymbolInfo($<symbol>1->getName(), $<symbol>1->getType(), $<symbol>1->getDeclaration()));
+
 	$<symbol>$ -> setName($<symbol>1->getName());
+	arguments.push_back(new SymbolInfo($<symbol>1->getName(), $<symbol>1->getType(), $<symbol>1->getDeclaration()));
 } 
-
-
-
-
-
-
 
 %%
 
-
-
 int main(int argc,char *argv[])
 {
-
 	if((fp=fopen(argv[1],"r"))==NULL)
 	{
 		printf("Cannot Open Input File.\n");
