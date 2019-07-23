@@ -169,6 +169,7 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 	$<symbol>$ = new SymbolInfo();
 	
 	SymbolInfo* temp = table -> lookUp($<symbol>2 -> getName());
+	//blah
 	if(temp != 0){
 		int total = temp -> getFunction() -> getTotalParameters();
 		if(total != 0){
