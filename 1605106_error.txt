@@ -1,0 +1,21 @@
+Error at Line 2 : Undeclared variable: a
+
+Error at Line 6 : Multiple declaration of variable c
+
+Error at Line 7 : Undeclared variable : a 
+
+Error at Line 7 : Invalid array type 
+
+Error at Line 8 : Type mismatch
+
+Error at Line 9 : Both operand of modulus operator must be integer
+
+Error at Line 10 : Undeclared variable: a
+
+Error at Line 11 : Undeclared variable: a
+
+Error at Line 11 : Invalid number of arguments
+
+Error at Line 12 : Undeclared variable: b
+
+Total errors : 10
