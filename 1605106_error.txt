@@ -2,9 +2,9 @@ Error at Line 2 : Undeclared variable: a
 
 Error at Line 6 : Multiple declaration of variable c
 
-Error at Line 7 : Undeclared variable : a 
-
 Error at Line 7 : Invalid array type 
+
+Error at Line 7 : Undeclared variable : a 
 
 Error at Line 8 : Type mismatch
 

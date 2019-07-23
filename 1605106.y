@@ -169,7 +169,7 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 	$<symbol>$ = new SymbolInfo();
 	
 	SymbolInfo* temp = table -> lookUp($<symbol>2 -> getName());
-	//blah
+	
 	if(temp != 0){
 		int total = temp -> getFunction() -> getTotalParameters();
 		if(total != 0){
@@ -198,7 +198,10 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 	else{
 		table->insert($<symbol>2->getName(), "ID", "Function");
 		temp = table -> lookUp($<symbol>2 -> getName());
-		temp -> setFunction();
+		
+		temp -> setFunction(); //this creates the function for temp
+
+		//now the function must have a return type
 		temp -> getFunction() -> setRType($<symbol>1->getName());
 	}
 	$<symbol>$ -> setName($<symbol>1 -> getName() + $<symbol>2 -> getName() + "(" + ")" + ";");
@@ -207,49 +210,84 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 
 func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 	$<symbol>$ = new SymbolInfo();
-
-
-
-
 	SymbolInfo *temp = table->lookUp($<symbol>2->getName());
-	if(temp == 0){
-		table -> insert($<symbol>2 -> getName(), "ID", "Function");
-		temp = table -> lookUp($<symbol>2 -> getName());
-		temp -> setFunction();
-		temp -> getFunction() -> setDefined();
+	
+	if(temp != 0){
 
-		for(int i=0; i<parameters.size(); i++){
-			temp -> getFunction() -> addParameter(parameters[i] -> getName(), parameters[i] -> getDeclaration());
+		bool def = temp->getFunction()->getDefined();
+
+		if(def == 0){
+			
+			fprintf(errorFile,"Error at Line %d : Multiple definition of Function %s\n\n",lines, $<symbol>2->getName().c_str());
+
+			errors++;
 		}
-		temp -> getFunction() -> setRType($<symbol>1 -> getName());
-	}
-	else {
-		if(temp->getFunction()->getDefined()==0){
-			int totalParameters = temp -> getFunction() -> getTotalParameters();
-			if(totalParameters != parameters.size()){
-				errors++;
+		else {
+
+
+			if(temp -> getFunction() -> getTotalParameters() != parameters.size()){
+				
 				fprintf(errorFile,"Error at Line %d : Invalid number of parameters \n\n",lines);
+
+				errors++;
 			}
 			else {
 				vector<string>pType = temp -> getFunction()-> getParameterType();
-				for(int i=0; i<parameters.size(); i++) {
+				int limit = parameters.size();
+
+
+				for(int i=0; i<limit; i++) {
+					//Type mismatch checking 
+
 					if(parameters[i] -> getDeclaration() != pType[i]){
-						errors++;
+						
 						fprintf(errorFile, "Error at Line %d : Type Mismatch \n\n",lines);
+
+						errors++;
 						break;
 					}
 				}
 				if(temp->getFunction() -> getRType() != $<symbol>1 -> getName()){
-					errors++;
+					
 					fprintf(errorFile,"Error at Line %d : Return Type Mismatch \n\n",lines);
+
+
+					errors++;
 				}
 			}
+
+
+			//the function must set defined
 			temp -> getFunction() -> setDefined();
+
+
+
+
+
+			
 		}
-		else {
-			errors++;
-			fprintf(errorFile,"Error at Line %d : Multiple definition of Function %s\n\n",lines, $<symbol>2->getName().c_str());
-		}
+		
+	}
+	else {
+
+		table -> insert($<symbol>2 -> getName(), "ID", "Function");
+
+
+		
+		temp = table -> lookUp($<symbol>2 -> getName());
+		temp -> setFunction();
+		temp -> getFunction() -> setDefined();
+		int limit = parameters.size();
+
+
+		for(int i=0; i<limit; i++){ temp -> getFunction() -> addParameter(parameters[i] -> getName(), parameters[i] -> getDeclaration());}
+		
+		
+		temp -> getFunction() -> setRType($<symbol>1 -> getName());
+
+
+
+	
 	}
 } compound_statement {
 	fprintf(parser, "At line no : %d func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n\n", lines);
@@ -263,31 +301,54 @@ func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 | type_specifier ID LPAREN RPAREN {
 	$<symbol>$ = new SymbolInfo();
 	SymbolInfo *temp = table -> lookUp($<symbol>2 -> getName());
+
 	if(temp == 0){
 		table -> insert($<symbol>2 -> getName(), "ID", "Function");
+		
 		temp = table -> lookUp($<symbol>2 -> getName());
+		
 		temp -> setFunction();
 		temp -> getFunction() -> setDefined();
 		temp -> getFunction() -> setRType($<symbol>1 -> getName());
+		
 	}
+
+	
 	else if(temp -> getFunction() -> getDefined() == 0) {
-		if(temp -> getFunction() -> getRType() != $<symbol>1 -> getName()){
-			errors++;
-			fprintf(errorFile,"Error at Line %d : Return Type Mismatch \n\n",lines);
-		}
-		if(temp -> getFunction() -> getTotalParameters() != 0){
-			errors++;
+		int total = temp -> getFunction() -> getTotalParameters();
+		string returnType = temp -> getFunction() -> getRType();
+		if(total != 0){
+			
 			fprintf(errorFile,"Error at Line %d : Invalid number of parameters \n\n",lines);
+
+			errors++;
 		}
+		if(returnType != $<symbol>1 -> getName()){
+			
+			fprintf(errorFile,"Error at Line %d : Return Type Mismatch \n\n",lines);
+
+			errors++;
+		}
+		
 		temp -> getFunction() -> setDefined();
 	}
+
+	
+	
 	else {
-		errors++;
+		
 		fprintf(errorFile,"Error at Line %d : Multiple definition of Function %s\n\n",lines, $<symbol>2->getName().c_str());
-	}
+		
+		
+		errors++;
+		
+		}
 } compound_statement {
 	fprintf(parser, "At line no : %d func_definition : type_specifier ID LPAREN RPAREN compound_statement\n", lines);
+	
 	fprintf(parser, "%s %s() %s\n\n", $<symbol>1 -> getName().c_str(),$<symbol>2 -> getName().c_str() ,$<symbol>6 -> getName().c_str());
+	
+	
 	$<symbol>$ -> setName($<symbol>1 -> getName() +$<symbol>2 -> getName()+"()"+ $<symbol>6 -> getName());
 }
 ;
@@ -351,24 +412,41 @@ var_declaration: type_specifier declaration_list SEMICOLON {
 	fprintf(parser, "At line no : %d var_declaration : type_specifier declaration_list SEMICOLON\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "%s %s;\n\n", $<symbol>1->getName().c_str(), $<symbol>2->getName().c_str());
-	if($<symbol>1 -> getName() == "void "){
-		errors++;
+	string name = $<symbol>1 -> getName();
+	if(name == "void "){
+		
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
+
+		errors++;
 	}
 	else {
-		for(int i =0; i<declarations.size(); i++){
+		int limit = declarations.size();
+		for(int i =0; i < limit; i++){
+
 			if(table -> findCurrent(declarations[i]->getName())) {
-				errors++;
+				
 				fprintf(errorFile,"Error at Line %d : Multiple declaration of variable %s\n\n",lines, declarations[i]->getName().c_str());
+				errors++;
+				
 				continue;
 			}
-			if(declarations[i]-> getType().size()==3){
-				declarations[i] -> setType(declarations[i] -> getType().substr(0, declarations[i] -> getType().size()-1));
-				table -> insert(declarations[i]->getName(), declarations[i] -> getType(), $<symbol>1 -> getName()+"array");
+			
+			if(declarations[i]-> getType().size() != 3){
+
+				table -> insert(declarations[i] -> getName(), declarations[i] -> getType(), $<symbol>1 -> getName());
+
+				
 			}
 			else {
-				table -> insert(declarations[i] -> getName(), declarations[i] -> getType(), $<symbol>1 -> getName());
+				string s = declarations[i] -> getType().substr(0, declarations[i] -> getType().size()-1);
+
+				declarations[i] -> setType(s);
+				
+				table -> insert(declarations[i]->getName(), declarations[i] -> getType(), $<symbol>1 -> getName()+"array");
 			}
+
+			
+			
 		}
 	}
 	declarations.clear();
@@ -534,48 +612,82 @@ expression_statement: SEMICOLON {
 
 variable: ID {
 	fprintf(parser, "At line no : %d variable : ID\n\n", lines);
+
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "%s\n\n", $<symbol>1 -> getName().c_str());
-	if(table -> lookUp($<symbol>1 -> getName())==0){
-		errors++;
-		fprintf(errorFile,"Error at Line %d : Undeclared variable: %s\n\n",lines, $<symbol>1 -> getName().c_str());
-	}
-	else if(table -> lookUp($<symbol>1 -> getName())-> getDeclaration() == "int array" || table -> lookUp($<symbol>1 -> getName())-> getDeclaration() == "float array" ){
-		errors++;
-		fprintf(errorFile,"Error at Line %d : %s is not an array\n\n",lines, $<symbol>1 -> getName().c_str());
-	}
+
 	if(table -> lookUp($<symbol>1 -> getName()) != 0){
+
 		$<symbol>$ -> setDeclaration(table -> lookUp($<symbol>1 -> getName()) -> getDeclaration());
 	}
+
+	if(table -> lookUp($<symbol>1 -> getName()) == 0){
+		
+		fprintf(errorFile,"Error at Line %d : Undeclared variable: %s\n\n",lines, $<symbol>1 -> getName().c_str());
+		
+		errors++;
+		}
+	else if(table -> lookUp($<symbol>1 -> getName())-> getDeclaration() == "float array" || table -> lookUp($<symbol>1 -> getName())-> getDeclaration() == "int array" ){
+		
+		fprintf(errorFile,"Error at Line %d : %s is not an array\n\n",lines, $<symbol>1 -> getName().c_str());
+		
+		errors++;
+		}
+	
+
+
 	$<symbol>$ -> setName($<symbol>1 -> getName());
 
 
 }
 | ID LTHIRD expression RTHIRD {
+
+
 	fprintf(parser, "At line no : %d variable : ID LTHIRD expression RTHIRD\n\n", lines);
+
 	$<symbol>$ = new SymbolInfo();
+
+	string dec = $<symbol>3 -> getDeclaration();
+
 	fprintf(parser, "%s[%s]\n\n", $<symbol>1 -> getName().c_str(), $<symbol>3 -> getName().c_str());
-	if(table -> lookUp($<symbol>1 -> getName())==0){
-		errors++;
-		fprintf(errorFile,"Error at Line %d : Undeclared variable : %s \n\n",lines, $<symbol>1 -> getName().c_str());
-	}
-	if($<symbol>3 -> getDeclaration() == "float " || $<symbol>3 -> getDeclaration() == "void ") {
-		errors++;
+	if(dec == "void " || dec == "float ") {
+		
 		fprintf(errorFile,"Error at Line %d : Invalid array type \n\n",lines);
+
+		errors++;
 	}
+	if(table -> lookUp($<symbol>1 -> getName())==0){
+		
+		fprintf(errorFile,"Error at Line %d : Undeclared variable : %s \n\n",lines, $<symbol>1 -> getName().c_str());
+		
+		errors++;
+	}
+
+
+	
 	if(table -> lookUp($<symbol>1 -> getName()) != 0){
-		if(table -> lookUp($<symbol>1 -> getName()) -> getDeclaration() != "int array" && table -> lookUp($<symbol>1 -> getName()) -> getDeclaration() != "float array"){
-			errors++;
+
+
+
+		if(table -> lookUp($<symbol>1 -> getName()) -> getDeclaration() == "float array") $<symbol>1 -> setDeclaration("float ");
+
+		if(table -> lookUp($<symbol>1 -> getName()) -> getDeclaration() != "float array" && table -> lookUp($<symbol>1 -> getName()) -> getDeclaration() != "int array"){
+			
 			fprintf(errorFile,"Error at Line %d : Type Mismatch \n\n",lines);
+
+			errors++;
 		}
-		if(table -> lookUp($<symbol>1 -> getName()) -> getDeclaration() == "int array"){
-			$<symbol>1 -> setDeclaration("int ");
-		}
-		if(table -> lookUp($<symbol>1 -> getName()) -> getDeclaration() == "float array"){
-			$<symbol>1 -> setDeclaration("float ");
-		}
+
+		if(table -> lookUp($<symbol>1 -> getName()) -> getDeclaration() == "int array") $<symbol>1 -> setDeclaration("int ");
+
+
+		
+		
+		
 		$<symbol>$ -> setDeclaration($<symbol>1 -> getDeclaration());
 	}
+
+
 	$<symbol>$ -> setName($<symbol>1 -> getName() + "[" + $<symbol>3 -> getName() + "]");
 
 }
@@ -659,13 +771,17 @@ simple_expression: term {
 	fprintf(parser, "At line no : %d simple_expression : simple_expression ADDOP term\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
 	fprintf(parser, "%s%s%s\n\n", $<symbol>1->getName().c_str(), $<symbol>2->getName().c_str(), $<symbol>3->getName().c_str());
-	if($<symbol>1->getDeclaration() == "void " || $<symbol>3->getDeclaration() == "void ") {
-		errors++;
-		fprintf(errorFile,"Error at Line %d : Type mismatch\n\n",lines);
-		$<symbol>$ -> setDeclaration("int ");
+	string f = "float ";
+	string v = "void ";
+	if($<symbol>3->getDeclaration() == f || $<symbol>1->getDeclaration() == f ) {
+		$<symbol>$ -> setDeclaration(f);
 	}
-	else if($<symbol>1->getDeclaration() == "float " || $<symbol>3->getDeclaration() == "float ") {
-		$<symbol>$ -> setDeclaration("float ");
+	else if($<symbol>3->getDeclaration() == v || $<symbol>1->getDeclaration() == v) {
+		$<symbol>$ -> setDeclaration("int ");
+		fprintf(errorFile,"Error at Line %d : Type mismatch\n\n",lines);
+		
+
+		errors++;
 	}
 	else $<symbol>$ -> setDeclaration("int ");
 	$<symbol>$ -> setName($<symbol>1 -> getName()+ $<symbol>2->getName()+ $<symbol>3->getName().c_str());
@@ -757,36 +873,55 @@ factor: variable {
 | ID LPAREN argument_list RPAREN {
 	fprintf(parser, "At line no : %d factor : ID LPAREN argument_list RPAREN\n\n", lines);
 	$<symbol>$ = new SymbolInfo();
+	
 	fprintf(parser, "%s(%s)\n\n",$<symbol>1->getName().c_str(), $<symbol>3->getName().c_str());
+	
 	SymbolInfo *temp = table -> lookUp($<symbol>1->getName());
 	if(temp == 0){
-		errors++;
-		fprintf(errorFile,"Error at Line %d : Undeclared function\n\n",lines);
+
 		$<symbol>$->setDeclaration("int ");
+		
+		fprintf(errorFile,"Error at Line %d : Undeclared function\n\n",lines);
+		errors++;
+		
 	}
 	else if(temp -> getFunction() == 0){
-		errors++;
-		fprintf(errorFile,"Error at Line %d : Not a function\n\n",lines);
 		$<symbol>$->setDeclaration("int ");
+		
+		fprintf(errorFile,"Error at Line %d : Not a function\n\n",lines);
+
+		errors++;
+		
 	}
 	else{
-		if(temp -> getFunction() -> getDefined() == 0){
-			errors++;
-			fprintf(errorFile,"Error at Line %d : Undeclared function\n\n",lines);
-		}
+		
 		int p = temp -> getFunction() -> getTotalParameters();
-		$<symbol>$ -> setDeclaration(temp -> getFunction() -> getRType());
-		if(p != arguments.size()){
+		bool def = temp -> getFunction() -> getDefined();
+		if(def == 0){
+			
+			fprintf(errorFile,"Error at Line %d : Undeclared function\n\n",lines);
+
 			errors++;
+		}
+		$<symbol>$ -> setDeclaration(temp -> getFunction() -> getRType());
+		
+		if(p != arguments.size()){
+			
 			fprintf(errorFile,"Error at Line %d : Invalid number of arguments\n\n",lines);
+
+			errors++;
 		}
 		else{
-			vector<string> pl = temp -> getFunction() -> getParameterList();
+			
 			vector<string> pt = temp -> getFunction() -> getParameterType();
-			for(int i=0; i<arguments.size(); i++){
+			int argSize = arguments.size();
+			for(int i=0; i < argSize; i++){
+
 				if(arguments[i]->getDeclaration()!=pt[i]){
-					errors++;
+					
 					fprintf(errorFile,"Error at Line %d : Type mismatch\n\n",lines);
+
+					errors++;
 					break;
 				}
 			}

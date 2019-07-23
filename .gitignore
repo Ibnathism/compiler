@@ -3,3 +3,4 @@
 /.vscode/*
 parser.y
 moss.pl
+segmentation.sh
