@@ -33,7 +33,6 @@ class Function
             void addParameter(string newparameter,string type){
                 parameterList.push_back(newparameter);
                 parameterType.push_back(type);
-              //  cout<<newpara<<endl;
                 setTotalParameters();
             }
             vector<string> getParameterList(){

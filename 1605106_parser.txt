@@ -58,9 +58,7 @@ return a;
 
 At line no : 3 func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement
 
-int  func(int  a){
-return a;
-} func(int  a){
+int  func(int  a) {
 return a;
 }
 
@@ -601,3 +599,4 @@ return 0;
 
 
 Total lines : 14
+Total errors : 7
