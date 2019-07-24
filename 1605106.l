@@ -74,13 +74,13 @@ UNTERMINATED_COMMENT [/][*]([^*]|([*][^/]))*[^"*/"]
 
 {CONST_INT} {
 	SymbolInfo *si = new SymbolInfo(yytext, "CONST_INT");
-	yylval.symbol = si;
+	yylval.var = si;
 	return CONST_INT;
 	}
 
 {CONST_FLOAT} {
 	SymbolInfo *si = new SymbolInfo(yytext, "CONST_FLOAT");
-	yylval.symbol = si;
+	yylval.var = si;
 	return CONST_FLOAT;
 	}
 
@@ -101,7 +101,7 @@ UNTERMINATED_COMMENT [/][*]([^*]|([*][^/]))*[^"*/"]
 {CONST_STRING} {
 	string str = convertSpecialCharacter(yytext);
 	SymbolInfo *si = new SymbolInfo(str, "CONST_STRING");
-	yylval.symbol = si;
+	yylval.var = si;
 	return CONST_STRING;
 }
 {UNTERMINATED_STRING} {
@@ -141,25 +141,25 @@ UNTERMINATED_COMMENT [/][*]([^*]|([*][^/]))*[^"*/"]
 
 "+"|"-" {
 	SymbolInfo *si = new SymbolInfo(yytext, "ADDOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return ADDOP;
 }
 
 "*"|"/"|"%" {
 	SymbolInfo *si = new SymbolInfo(yytext, "MULOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return MULOP;
 }
 
 "++"|"--" {
 	SymbolInfo *si = new SymbolInfo(yytext, "INCOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return INCOP;
 }
 
 "<"|"<="|">"|">="|"=="|"!=" {
 	SymbolInfo *si = new SymbolInfo(yytext, "RELOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return RELOP;
 }
 
@@ -167,13 +167,13 @@ UNTERMINATED_COMMENT [/][*]([^*]|([*][^/]))*[^"*/"]
 
 "&&"|"||" {
 	SymbolInfo *si = new SymbolInfo(yytext, "LOGICOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return LOGICOP;
 }
 
 "&"|"|"|"^"|"<<"|">>" {
 	SymbolInfo *si = new SymbolInfo(yytext, "BITOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return BITOP;
 }
 
@@ -193,7 +193,7 @@ UNTERMINATED_COMMENT [/][*]([^*]|([*][^/]))*[^"*/"]
 	if(si==NULL){
 		si = new SymbolInfo(yytext, "ID");
 	}
-	yylval.symbol = si;
+	yylval.var = si;
 	return ID;
 	}
 

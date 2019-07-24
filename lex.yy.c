@@ -762,7 +762,7 @@ YY_RULE_SETUP
 #line 75 "1605106.l"
 {
 	SymbolInfo *si = new SymbolInfo(yytext, "CONST_INT");
-	yylval.symbol = si;
+	yylval.var = si;
 	return CONST_INT;
 	}
 	YY_BREAK
@@ -771,7 +771,7 @@ YY_RULE_SETUP
 #line 81 "1605106.l"
 {
 	SymbolInfo *si = new SymbolInfo(yytext, "CONST_FLOAT");
-	yylval.symbol = si;
+	yylval.var = si;
 	return CONST_FLOAT;
 	}
 	YY_BREAK
@@ -797,7 +797,7 @@ YY_RULE_SETUP
 {
 	string str = convertSpecialCharacter(yytext);
 	SymbolInfo *si = new SymbolInfo(str, "CONST_STRING");
-	yylval.symbol = si;
+	yylval.var = si;
 	return CONST_STRING;
 }
 	YY_BREAK
@@ -912,7 +912,7 @@ YY_RULE_SETUP
 #line 142 "1605106.l"
 {
 	SymbolInfo *si = new SymbolInfo(yytext, "ADDOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return ADDOP;
 }
 	YY_BREAK
@@ -921,7 +921,7 @@ YY_RULE_SETUP
 #line 148 "1605106.l"
 {
 	SymbolInfo *si = new SymbolInfo(yytext, "MULOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return MULOP;
 }
 	YY_BREAK
@@ -930,7 +930,7 @@ YY_RULE_SETUP
 #line 154 "1605106.l"
 {
 	SymbolInfo *si = new SymbolInfo(yytext, "INCOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return INCOP;
 }
 	YY_BREAK
@@ -939,7 +939,7 @@ YY_RULE_SETUP
 #line 160 "1605106.l"
 {
 	SymbolInfo *si = new SymbolInfo(yytext, "RELOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return RELOP;
 }
 	YY_BREAK
@@ -953,7 +953,7 @@ YY_RULE_SETUP
 #line 168 "1605106.l"
 {
 	SymbolInfo *si = new SymbolInfo(yytext, "LOGICOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return LOGICOP;
 }
 	YY_BREAK
@@ -962,7 +962,7 @@ YY_RULE_SETUP
 #line 174 "1605106.l"
 {
 	SymbolInfo *si = new SymbolInfo(yytext, "BITOP");
-	yylval.symbol = si;
+	yylval.var = si;
 	return BITOP;
 }
 	YY_BREAK
@@ -1019,7 +1019,7 @@ YY_RULE_SETUP
 	if(si==NULL){
 		si = new SymbolInfo(yytext, "ID");
 	}
-	yylval.symbol = si;
+	yylval.var = si;
 	return ID;
 	}
 	YY_BREAK
