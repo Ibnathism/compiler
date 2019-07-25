@@ -81,8 +81,8 @@ unit: var_declaration {
 func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 	fprintf(parser, "At line no : %d func_declaration : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON\n\n", lines);
 	$<var>$ = new SymbolInfo();
-	fprintf(parser, "%s %s(%s);\n\n", $<var>1 -> getName().c_str(), $<var>2 -> getName().c_str(), $<var>4 -> getName().c_str());
 	string variableName = $<var>2->getName();
+	fprintf(parser, "%s %s(%s);\n\n", $<var>1 -> getName().c_str(), $<var>2 -> getName().c_str(), $<var>4 -> getName().c_str());
 	SymbolInfo *temp = myTable->lookUp(variableName);
 	if(temp != 0){
 		//cout << "Check totalparameter " << temp -> getFunction() -> getTotalParameters() << endl;
@@ -111,11 +111,11 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 
 	}
 	else{
+		string name2 = $<var>2 -> getName();
 		myTable->insert($<var>2->getName(), "ID", "Function");
-		temp = myTable -> lookUp($<var>2 -> getName());
+		temp = myTable -> lookUp(name2);
 		temp -> setFunction();
 		int limit = parameters.size();
-
 		for(int i=0; i<limit; i++){
 			string paramName = parameters[i]->getName();
 			string paramDec = parameters[i]->getDeclaration();
@@ -125,10 +125,9 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 		parameters.clear();
 		string n = $<var>1->getName();
 		temp -> getFunction() -> setRType(n);
-	
-		
 	}
-	$<var>$ -> setName($<var>1 -> getName() + $<var>2 -> getName() + "(" + $<var>4 -> getName() + ")" + ";");
+	string var1 = $<var>1 -> getName();  string var2 = $<var>2 -> getName(); string var4 = $<var>4 -> getName();
+	$<var>$ -> setName(var1 + var2 + "(" + var4 + ")" + ";");
 }
 | type_specifier ID LPAREN RPAREN SEMICOLON {
 	fprintf(parser, "At line no : %d func_declaration : type_specifier ID LPAREN RPAREN SEMICOLON\n\n", lines);
@@ -240,40 +239,34 @@ func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 	}
 } compound_statement {
 	fprintf(parser, "At line no : %d func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n\n", lines);
-	string name1 = $<var>1 -> getName();string name2 = $<var>2 -> getName();string name4 = $<var>4 -> getName();string name7 = $<var>7 -> getName(); fprintf(parser, "%s %s(%s) %s\n\n", $<var>1 -> getName().c_str(), $<var>2 -> getName().c_str(), $<var>4 -> getName().c_str(), $<var>7 -> getName().c_str());
+	fprintf(parser, "%s %s(%s) %s\n\n", $<var>1 -> getName().c_str(), $<var>2 -> getName().c_str(), $<var>4 -> getName().c_str(), $<var>7 -> getName().c_str());
+	string name1 = $<var>1 -> getName();string name2 = $<var>2 -> getName();string name4 = $<var>4 -> getName();string name7 = $<var>7 -> getName(); 
 	$<var>$ -> setName(name1 + " " + name2 + "(" + name4 + ")" + name7);
 	//cout << $<var>1 -> getName() << endl;
 }
 | type_specifier ID LPAREN RPAREN {
 	$<var>$ = new SymbolInfo();
 	string name = $<var>2 -> getName();
+	string name1 = $<var>1 -> getName();
 	SymbolInfo *temp = myTable -> lookUp(name);
 	if(temp == 0){
 		myTable -> insert(name, "ID", "Function");
 		temp = myTable -> lookUp(name);
 		temp -> setFunction();
 		temp -> getFunction() -> setDefined();
-		temp -> getFunction() -> setRType($<var>1 -> getName());
-		
+		temp -> getFunction() -> setRType(name1);
 	}
-
-	
 	else if(temp -> getFunction() -> getDefined() == 0) {
 		int total = temp -> getFunction() -> getTotalParameters();
 		string returnType = temp -> getFunction() -> getRType();
 		if(total != 0){
-			
 			fprintf(errorFile,"Error at Line %d : Invalid number of parameters \n\n",lines);
-
 			errors++;
 		}
 		if(returnType != $<var>1 -> getName()){
-			
 			fprintf(errorFile,"Error at Line %d : Return Type Mismatch \n\n",lines);
-
 			errors++;
 		}
-		
 		temp -> getFunction() -> setDefined();
 	}
 
@@ -309,9 +302,11 @@ parameter_list: parameter_list COMMA type_specifier ID {
 | parameter_list COMMA type_specifier {
 	fprintf(parser, "At line no : %d parameter_list : parameter_list COMMA type_specifier\n\n", lines);
 	$<var>$ = new SymbolInfo();
-
-	$<var>$ -> setName($<var>1 -> getName() + "," + $<var>3 -> getName());
-	parameters.push_back(new SymbolInfo("","ID",$<var>3 -> getName()));
+	string var1 = $<var>1 -> getName();
+	string var3 = $<var>3 -> getName();
+	$<var>$ -> setName(var1 + "," + var3);
+	string type = "ID";
+	parameters.push_back(new SymbolInfo("",type,var3));
 	fprintf(parser, "%s,%s\n\n", $<var>1 -> getName().c_str(), $<var>3 -> getName().c_str());
 	
 }
@@ -531,12 +526,11 @@ statement: var_declaration {
 | FOR LPAREN expression_statement expression_statement expression RPAREN statement {
 	fprintf(parser, "At line no : %d statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement\n\n", lines);
 	$<var>$ = new SymbolInfo();
-	fprintf(parser, "for(%s %s %s)\n%s\n", $<var>3 -> getName().c_str(), $<var>4 -> getName().c_str(), $<var>5 -> getName().c_str(), $<var>7 -> getName().c_str());
 	string v = "void ";
-	if($<var>3 -> getDeclaration() == v){
-		
+	string dec3 = $<var>3 -> getDeclaration();
+	fprintf(parser, "for(%s %s %s)\n%s\n", $<var>3 -> getName().c_str(), $<var>4 -> getName().c_str(), $<var>5 -> getName().c_str(), $<var>7 -> getName().c_str());
+	if(dec3 == v){
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
-
 		errors++;
 	}
 	string name3 = $<var>3 -> getName();
@@ -719,14 +713,11 @@ variable: ID {
 expression: logic_expression {
 	fprintf(parser, "At line no : %d expression : logic_expression\n\n", lines);
 	$<var>$ = new SymbolInfo();
-	
-	$<var>$ -> setName($<var>1 -> getName());
-
+	string name1 = $<var>1 -> getName();
+	$<var>$ -> setName(name1);
+	string dec1 = $<var>1 -> getDeclaration();
 	fprintf(parser, "%s\n\n", $<var>1 -> getName().c_str());
-
-	$<var>$ -> setDeclaration($<var>1 -> getDeclaration());
-
-	
+	$<var>$ -> setDeclaration(dec1);
 }
 | variable ASSIGNOP logic_expression {
 	fprintf(parser, "At line no : %d expression : variable ASSIGNOP logic_expression\n\n", lines);
@@ -856,11 +847,9 @@ term: unary_expression {
 	fprintf(parser, "At line no : %d term : unary_expression\n\n", lines);
 	$<var>$ = new SymbolInfo();
 	string dec = $<var>1 ->getDeclaration();
-	
-	$<var>$ -> setName($<var>1 -> getName());
-
+	string name1 = $<var>1 -> getName();
+	$<var>$ -> setName(name1);
 	fprintf(parser, "%s\n\n", $<var>1->getName().c_str());
-
 	$<var>$ -> setDeclaration(dec);
 	
 }
@@ -874,12 +863,8 @@ term: unary_expression {
 	string dec3 = $<var>3->getDeclaration();
 	fprintf(parser, "%s%s%s\n\n", $<var>1->getName().c_str(), $<var>2->getName().c_str(), $<var>3->getName().c_str());
 	if(dec1 == v || dec3 == v) {
-
 		$<var>$ -> setDeclaration(i);
-	
 		fprintf(errorFile,"Error at Line %d : Type Mismatch\n\n",lines);
-		
-
 		errors++;
 	}
 	else if($<var>2 -> getName() == "/"){
@@ -972,63 +957,47 @@ unary_expression: ADDOP unary_expression {
 | factor {
 	fprintf(parser, "At line no : %d unary_expression : factor\n\n", lines);
 	$<var>$ = new SymbolInfo();
-	
-	
-	$<var>$ -> setName($<var>1->getName());
-
+	string var1 = $<var>1->getName();
+	$<var>$ -> setName(var1);
 	fprintf(parser, "%s\n\n",$<var>1->getName().c_str());
-
-
-	$<var>$ -> setDeclaration($<var>1-> getDeclaration());
+	string dec1 = $<var>1 -> getDeclaration();
+	$<var>$ -> setDeclaration(dec1);
 }
 ;
-
 factor: variable {
 	fprintf(parser, "At line no : %d factor : variable\n\n", lines);
 	$<var>$ = new SymbolInfo();
-	
-	
-	$<var>$ -> setName($<var>1->getName());
-
+	string var1 = $<var>1->getName();
+	$<var>$ -> setName(var1);
 	fprintf(parser, "%s\n\n",$<var>1->getName().c_str());
-
-	$<var>$ -> setDeclaration($<var>1 -> getDeclaration());
+	string dec1 = $<var>1 -> getDeclaration();
+	$<var>$ -> setDeclaration(dec1);
 }
 | ID LPAREN argument_list RPAREN {
 	fprintf(parser, "At line no : %d factor : ID LPAREN argument_list RPAREN\n\n", lines);
 	$<var>$ = new SymbolInfo();
-
 	string i = "int ";
-	
 	fprintf(parser, "%s(%s)\n\n",$<var>1->getName().c_str(), $<var>3->getName().c_str());
 	string variableName = $<var>1->getName();
 	SymbolInfo *temp = myTable -> lookUp(variableName);
 	//cout << $<var>1->getName()<< endl;
 	//cout << temp->getFunction() -> getTotalParameters() << endl;
 	if(temp == 0){
-
 		$<var>$->setDeclaration(i);
-		
 		fprintf(errorFile,"Error at Line %d : Undeclared function\n\n",lines);
 		errors++;
-		
 	}
 	else if(temp -> getFunction() == 0){
 		$<var>$->setDeclaration(i);
-		
 		fprintf(errorFile,"Error at Line %d : Not a function\n\n",lines);
-
 		errors++;
 		
 	}
 	else{
-		
 		int p = temp -> getFunction() -> getTotalParameters();
 		bool def = temp -> getFunction() -> getDefined();
 		if(def == 0){
-			
 			fprintf(errorFile,"Error at Line %d : Undeclared function\n\n",lines);
-
 			errors++;
 		}
 		$<var>$ -> setDeclaration(temp -> getFunction() -> getRType());
@@ -1037,19 +1006,14 @@ factor: variable {
 			//cout << lines << " " <<p <<endl;
 			//cout << lines << " " <<arguments.size() <<endl;
 			fprintf(errorFile,"Error at Line %d : Invalid number of arguments\n\n",lines);
-
 			errors++;
 		}
 		else{
-			
 			vector<string> pt = temp -> getFunction() -> getParameterType();
 			int argSize = arguments.size();
 			for(int i=0; i < argSize; i++){
-
 				if(arguments[i]->getDeclaration()!=pt[i]){
-					
 					fprintf(errorFile,"Error at Line %d : Type Mismatch\n\n",lines);
-
 					errors++;
 					break;
 				}
@@ -1062,60 +1026,47 @@ factor: variable {
 | LPAREN expression RPAREN {
 	fprintf(parser, "At line no : %d factor : LPAREN expression RPAREN\n\n", lines);
 	$<var>$ = new SymbolInfo();
-	
-	
-	$<var>$ -> setName("("+ $<var>2->getName()+")");
-
+	string var2 = "("+ $<var>2->getName()+")";
+	$<var>$ -> setName(var2);
 	fprintf(parser, "(%s)\n\n",$<var>2->getName().c_str());
-
-	$<var>$ -> setDeclaration($<var>2 -> getDeclaration());
+	string dec2 = $<var>2 -> getDeclaration();
+	$<var>$ -> setDeclaration(dec2);
 }
 | CONST_INT {
 	fprintf(parser, "At line no : %d factor : CONST_INT\n\n", lines);
 	$<var>$ = new SymbolInfo();
-
 	string i = "int ";
-	
-	
-	$<var>$ -> setName($<var>1->getName());
-
+	string var1 = $<var>1->getName();
+	$<var>$ -> setName(var1);
 	fprintf(parser, "%s\n\n",$<var>1->getName().c_str());
-
 	$<var>$ -> setDeclaration(i);
 }
 | CONST_FLOAT {
 	fprintf(parser, "At line no : %d factor : CONST_FLOAT\n\n", lines);
 	$<var>$ = new SymbolInfo();
-	
 	string f = "float ";
-	
-	$<var>$ -> setName($<var>1->getName());
-
+	string var1 = $<var>1->getName();
+	$<var>$ -> setName(var1);
 	fprintf(parser, "%s\n\n",$<var>1->getName().c_str());
-
 	$<var>$ -> setDeclaration(f);
 }
 | variable INCOP {
 	fprintf(parser, "At line no : %d factor : variable INCOP\n\n", lines);
-	$<var>$ = new SymbolInfo();
-	
-	
-	$<var>$ -> setName($<var>1->getName() + "++");
-
+	$<var>$ = new SymbolInfo();	
+	string var1 = $<var>1->getName() + "++";
+	$<var>$ -> setName(var1);
 	fprintf(parser, "%s\n\n",$<var>1->getName().c_str());
-
-	$<var>$ -> setDeclaration($<var>1 -> getDeclaration());
+	string dec1 = $<var>1 -> getDeclaration();
+	$<var>$ -> setDeclaration(dec1);
 }
 | variable DECOP {
 	fprintf(parser, "At line no : %d factor : variable DECOP\n\n", lines);
 	$<var>$ = new SymbolInfo();
-	
-	
-	$<var>$ -> setName($<var>1->getName()+"--");
-
+	string var1 = $<var>1->getName()+"--";
+	$<var>$ -> setName(var1);
 	fprintf(parser, "%s\n\n",$<var>1->getName().c_str());
-
-	$<var>$ -> setDeclaration($<var>1 -> getDeclaration());
+	string dec1 = $<var>1 -> getDeclaration();
+	$<var>$ -> setDeclaration(dec1);
 }
 ;
 
@@ -1123,9 +1074,8 @@ factor: variable {
 argument_list: arguments {
 	fprintf(parser, "At line no : %d argument_list : arguments\n\n", lines);
 	$<var>$ = new SymbolInfo();
-	
-	$<var>$ -> setName($<var>1->getName());
-
+	string var1 = $<var>1->getName();
+	$<var>$ -> setName(var1);
 	fprintf(parser, "%s\n\n",$<var>1->getName().c_str());
 }
 |  {
@@ -1158,25 +1108,16 @@ arguments: arguments COMMA logic_expression {
 
 int main(int argc,char *argv[])
 {
-	if((fp=fopen(argv[1],"r"))==NULL)
-	{
-		printf("Cannot Open Input File.\n");
-		exit(1);
-	}
-
+	if((fp=fopen(argv[1],"r"))==NULL){
+		printf("Cannot Open Input File.\n"); exit(1);}
 	yyin=fp;
 	myTable -> enterScope(7);
 	yyparse();
-
-
 	fprintf(parser, "Total lines : %d\n",lines);
 	fprintf(errorFile, "Total errors : %d", errors);
 	fprintf(parser, "Total errors : %d", errors);
-
-
 	fclose(fp);
 	fclose(parser);
 	fclose(errorFile);
-
 	return 0;
 }
