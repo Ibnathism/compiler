@@ -13,7 +13,7 @@
 
  #line 8 "/usr/share/bison++/bison.h"
 
-#line 41 "1605106.y"
+#line 60 "1605106.y"
 typedef union
 {
     SymbolInfo* var;

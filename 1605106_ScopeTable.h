@@ -171,6 +171,25 @@ void printScopeTable() {
     }
 }
 
+void printScopeTable(FILE *file){
+    SymbolInfo *current;
+    for (int i = 0; i < this->tableSize; ++i) {
+        if (this->list[i] != nullptr) {
+            fprintf(file, "\n\t%d --> ", i);
+            //write(file, to_string(i) + " --> ");
+            current = this->list[i];
+            fprintf(file, "<%s,%s>", current->getName().c_str(), current->getType().c_str());
+            while (current->next != nullptr) {
+                fprintf(file, " <%s,%s> ", current->next->getName().c_str(), current->next->getType().c_str());
+                current = current->next;
+            }
+        }
+    }
+    fprintf(file, "\n\n");
+}
+
+
+
 ~ScopeTable()  {
     delete[] list;
     delete parentScope;

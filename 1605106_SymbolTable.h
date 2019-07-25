@@ -14,15 +14,18 @@ using namespace std;
 class SymbolTable{
 public:
     ScopeTable* currentScope;
+    int currentScopeID;
 
 SymbolTable() {
     currentScope = nullptr;
+    currentScopeID = 0;
 }
 
 
 SymbolTable(int scopeTableSize) {
     currentScope = nullptr;
-	enterScope(scopeTableSize);
+	//enterScope(scopeTableSize);
+    currentScopeID = 0;
 }
 
 bool insert(const string &name, const string &type, const string &declaration){
@@ -35,17 +38,37 @@ bool insert(const string &name, const string &type, const string &declaration){
 void enterScope(const int &size) {
     ScopeTable* temp = currentScope;
     int id;
-    if (temp!=nullptr) id = (temp->tableId) +1 ;
+    if (temp!=nullptr) id = currentScopeID +1 ;
     else id = 1;
+    currentScopeID = id;
     auto* newScope = new ScopeTable(id, size);
     newScope->parentScope = temp;
     currentScope = newScope;
     if (currentScope->tableId!=1)
         FileInputOutput::write("New ScopeTable with id "+to_string(this->currentScope->tableId)+" created"+"\n");
+        
+}
+
+void enterScope(const int &size, FILE* file) {
+    ScopeTable* temp = currentScope;
+    int id;
+    if (temp!=nullptr) id = currentScopeID +1 ;
+    else id = 1;
+    currentScopeID = id;
+    auto* newScope = new ScopeTable(id, size);
+    newScope->parentScope = temp;
+    currentScope = newScope;
+    if (currentScope->tableId!=1)
+        fprintf(file, "New ScopeTable with id %d created\n\n", this->currentScopeID);
 }
 
 void exitScope() {
     FileInputOutput::write("ScopeTable with id "+to_string(this->currentScope->tableId)+" removed"+"\n");
+    currentScope = currentScope->parentScope;
+}
+
+void exitScope(FILE* file) {
+    fprintf(file, "ScopeTable with id %d removed\n\n", this->currentScopeID);
     currentScope = currentScope->parentScope;
 }
 
@@ -96,7 +119,7 @@ void printCurrentScopeTable() {
 }
 
 void printScopeTable(FILE *file){
-  fprintf(file, "\n\n\tScopeTable #%d",this->currentScope->tableId );
+  //fprintf(file, "\n\n\tScopeTable #%d",this->currentScope->tableId );
 
     SymbolInfo *current;
     for (int i = 0; i < this->currentScope->tableSize; ++i) {
@@ -117,6 +140,15 @@ void printScopeTable(FILE *file){
 void printAllST(FILE *file){
     ScopeTable* temp = currentScope;
     ///TODO printing all scopes in log file
+    fprintf(file, "\n\n\tScopeTable #%d",temp->tableId);
+    temp-> printScopeTable(file);
+    while (temp->parentScope!=nullptr)
+    {
+        temp = temp -> parentScope;
+        fprintf(file, "\n\n\tScopeTable #%d",temp->tableId);
+        temp-> printScopeTable(file);
+    }
+    
 
 }
 

@@ -1,15 +1,1 @@
-Error at Line 6 : Multiple declaration of variable c
-
-Error at Line 7 : Non-integer Array Index  
-
-Error at Line 8 : Type Mismatch
-
-Error at Line 9 : Integer operand on modulus operator
-
-Error at Line 10 : Type Mismatch
-
-Error at Line 11 : Type Mismatch
-
-Error at Line 12 : Undeclared variable: b
-
-Total errors : 7
+Total errors : 0

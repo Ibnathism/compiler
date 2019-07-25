@@ -32,4 +32,11 @@ static void write(string str){
     file << str;
 }
 
+static void write(string str , ostream filename){
+    //cout << str;
+    //ofstream file;
+    //file.open("1605106_output.txt", std::ios_base::app);
+    filename << str;
+}
+
 };
