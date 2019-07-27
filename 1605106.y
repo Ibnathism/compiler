@@ -22,14 +22,14 @@ vector<SymbolInfo*> arguments;
 
 
 
-FILE *parser = fopen("1605106_parser.txt", "w");
+FILE *parser = fopen("1605106_log.txt", "w");
 FILE *errorFile = fopen("1605106_error.txt", "w");
 FILE *fp;
 
 
 
 
-SymbolTable *myTable = new SymbolTable(7);
+SymbolTable *myTable = new SymbolTable(20);
 int lines = 1;
 int errors = 0;
 
@@ -108,9 +108,9 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 	
 	
 	if(temp != 0){
-		//cout << "Check totalparameter " << temp -> getFunction() -> getTotalParameters() << endl;
-		if(temp -> getFunction() -> getTotalParameters() != parameters.size()){
-			vector<string>pType = temp -> getFunction()-> getParameterType();
+		//cout << "Check totalparameter " << temp -> getMethod() -> getTotalParameters() << endl;
+		if(temp -> getMethod() -> getTotalParameters() != parameters.size()){
+			vector<string>pType = temp -> getMethod()-> getParameterType();
 			int limit = parameters.size();
 			for(int i=0; i < limit; i++) {
 				string decI = parameters[i] -> getDeclaration(); 
@@ -120,7 +120,7 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 					break;
 				}
 			}
-			string returnType = temp->getFunction() -> getRType();
+			string returnType = temp->getMethod() -> getRType();
 			if(returnType != $<var>1 -> getName()){
 				fprintf(errorFile,"Error at Line %d : Return Type Mismatch \n\n",lines);
 				errors++;
@@ -135,9 +135,9 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 	}
 	else{
 		string name2 = $<var>2 -> getName();
-		myTable->insert($<var>2->getName(), "ID", "Function");
+		myTable->insert($<var>2->getName(), "ID", "Method");
 		temp = myTable -> lookUp(name2);
-		temp -> setFunction();
+		temp -> setMethod();
 		int limit = parameters.size();
 		
 		
@@ -145,12 +145,12 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 		for(int i=0; i<limit; i++){
 			string paramName = parameters[i]->getName();
 			string paramDec = parameters[i]->getDeclaration();
-			temp -> getFunction() -> addParameter(paramName, paramDec);
+			temp -> getMethod() -> addParameter(paramName, paramDec);
 		}
 		//cout << "Check size " << parameters.size()<< endl;
 		parameters.clear();
 		string n = $<var>1->getName();
-		temp -> getFunction() -> setRType(n);
+		temp -> getMethod() -> setRType(n);
 	}
 	string var1 = $<var>1 -> getName();  string var2 = $<var>2 -> getName(); string var4 = $<var>4 -> getName();
 	$<var>$ -> setName(var1 + var2 + "(" + var4 + ")" + ";");
@@ -164,7 +164,7 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 	SymbolInfo* temp = myTable -> lookUp($<var>2 -> getName());
 	
 	if(temp != 0){
-		int total = temp -> getFunction() -> getTotalParameters();
+		int total = temp -> getMethod() -> getTotalParameters();
 		
 		
 		if(total != 0){
@@ -175,7 +175,7 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 			errors++;
 		}
 
-		string returnType = temp->getFunction() -> getRType();
+		string returnType = temp->getMethod() -> getRType();
 
 		if(returnType != $<var>1 -> getName()){
 			
@@ -192,12 +192,12 @@ func_declaration: type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
 	}
 	else{
 		string var2Name = $<var>2->getName();
-		myTable->insert(var2Name, "ID", "Function");
+		myTable->insert(var2Name, "ID", "Method");
 		temp = myTable -> lookUp(var2Name);
 		string var1Name = $<var>1->getName();
-		temp -> setFunction(); //this creates the function for temp
-		//now the function must have a return type
-		temp -> getFunction() -> setRType(var1Name);
+		temp -> setMethod(); //this creates the Method for temp
+		//now the Method must have a return type
+		temp -> getMethod() -> setRType(var1Name);
 	}
 	string name1 = $<var>1 -> getName();
 	
@@ -213,13 +213,13 @@ func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 	string name2 = $<var>2->getName();
 	SymbolInfo *temp = myTable->lookUp(name2);
 	if(temp != 0){
-		bool def = temp->getFunction()->getDefined();
+		bool def = temp->getMethod()->getDefined();
 		if(def != 0){
-			fprintf(errorFile,"Error at Line %d : Multiple definition of Function %s\n\n",lines, $<var>2->getName().c_str());
+			fprintf(errorFile,"Error at Line %d : Multiple definition of function %s\n\n",lines, $<var>2->getName().c_str());
 			errors++;
 		}
 		else {
-			if(temp -> getFunction() -> getTotalParameters() != parameters.size()){
+			if(temp -> getMethod() -> getTotalParameters() != parameters.size()){
 				
 				fprintf(errorFile,"Error at Line %d : Invalid number of parameters \n\n",lines);
 
@@ -228,7 +228,7 @@ func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 			else {
 				
 				
-				vector<string>pType = temp -> getFunction()-> getParameterType();
+				vector<string>pType = temp -> getMethod()-> getParameterType();
 				int limit = parameters.size();
 
 
@@ -241,34 +241,34 @@ func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 						break;
 					}
 				}
-				string returnType = temp->getFunction() -> getRType();
+				string returnType = temp->getMethod() -> getRType();
 				string n1 = $<var>1 -> getName();
 				if(returnType != n1){
 					fprintf(errorFile,"Error at Line %d : Return Type Mismatch \n\n",lines);
 					errors++;
 				}
 			}
-			//the function must set defined
-			temp -> getFunction() -> setDefined();
+			//the Method must set defined
+			temp -> getMethod() -> setDefined();
 
 			
 		}
 		
 	}
 	else {
-		string name2 = $<var>2 -> getName();string type = "ID";string dec = "Function";myTable -> insert(name2, type, dec);
+		string name2 = $<var>2 -> getName();string type = "ID";string dec = "Method";myTable -> insert(name2, type, dec);
 		temp = myTable -> lookUp(name2);
-		temp -> setFunction();
-		temp -> getFunction() -> setDefined();
+		temp -> setMethod();
+		temp -> getMethod() -> setDefined();
 		int limit = parameters.size();
 		string returnType = $<var>1 -> getName();
 		//cout << "LIMIT " << limit << endl;
 		for(int i=0; i<limit; i++){ 
 			string paramName = parameters[i] -> getName();
 			string paramDec = parameters[i] -> getDeclaration();
-			temp -> getFunction() -> addParameter(paramName, paramDec);
+			temp -> getMethod() -> addParameter(paramName, paramDec);
 			}
-		temp -> getFunction() -> setRType(returnType);
+		temp -> getMethod() -> setRType(returnType);
 	}
 } compound_statement {
 	string v1 = $<var>1 -> getName();
@@ -290,15 +290,15 @@ func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 	string name1 = $<var>1 -> getName();
 	SymbolInfo *temp = myTable -> lookUp(name);
 	if(temp == 0){
-		myTable -> insert(name, "ID", "Function");
+		myTable -> insert(name, "ID", "Method");
 		temp = myTable -> lookUp(name);
-		temp -> setFunction();
-		temp -> getFunction() -> setDefined();
-		temp -> getFunction() -> setRType(name1);
+		temp -> setMethod();
+		temp -> getMethod() -> setDefined();
+		temp -> getMethod() -> setRType(name1);
 	}
-	else if(temp -> getFunction() -> getDefined() == 0) {
-		int total = temp -> getFunction() -> getTotalParameters();
-		string returnType = temp -> getFunction() -> getRType();
+	else if(temp -> getMethod() -> getDefined() == 0) {
+		int total = temp -> getMethod() -> getTotalParameters();
+		string returnType = temp -> getMethod() -> getRType();
 		if(total != 0){
 			fprintf(errorFile,"Error at Line %d : Invalid number of parameters \n\n",lines);
 			errors++;
@@ -307,14 +307,14 @@ func_definition: type_specifier ID LPAREN parameter_list RPAREN {
 			fprintf(errorFile,"Error at Line %d : Return Type Mismatch \n\n",lines);
 			errors++;
 		}
-		temp -> getFunction() -> setDefined();
+		temp -> getMethod() -> setDefined();
 	}
 
 	
 	
 	else {
 		
-		fprintf(errorFile,"Error at Line %d : Multiple definition of Function %s\n\n",lines, $<var>2->getName().c_str());
+		fprintf(errorFile,"Error at Line %d : Multiple definition of function %s\n\n",lines, $<var>2->getName().c_str());
 		
 		
 		errors++;
@@ -1028,26 +1028,26 @@ factor: variable {
 	string variableName = $<var>1->getName();
 	SymbolInfo *temp = myTable -> lookUp(variableName);
 	//cout << $<var>1->getName()<< endl;
-	//cout << temp->getFunction() -> getTotalParameters() << endl;
+	//cout << temp->getMethod() -> getTotalParameters() << endl;
 	if(temp == 0){
 		$<var>$->setDeclaration(i);
 		fprintf(errorFile,"Error at Line %d : Undeclared function\n\n",lines);
 		errors++;
 	}
-	else if(temp -> getFunction() == 0){
+	else if(temp -> getMethod() == 0){
 		$<var>$->setDeclaration(i);
 		fprintf(errorFile,"Error at Line %d : Not a function\n\n",lines);
 		errors++;
 		
 	}
 	else{
-		int p = temp -> getFunction() -> getTotalParameters();
-		bool def = temp -> getFunction() -> getDefined();
+		int p = temp -> getMethod() -> getTotalParameters();
+		bool def = temp -> getMethod() -> getDefined();
 		if(def == 0){
 			fprintf(errorFile,"Error at Line %d : Undeclared function\n\n",lines);
 			errors++;
 		}
-		$<var>$ -> setDeclaration(temp -> getFunction() -> getRType());
+		$<var>$ -> setDeclaration(temp -> getMethod() -> getRType());
 		
 		if(p != arguments.size()){
 			//cout << lines << " " <<p <<endl;
@@ -1056,7 +1056,7 @@ factor: variable {
 			errors++;
 		}
 		else{
-			vector<string> pt = temp -> getFunction() -> getParameterType();
+			vector<string> pt = temp -> getMethod() -> getParameterType();
 			int argSize = arguments.size();
 			for(int i=0; i < argSize; i++){
 				if(arguments[i]->getDeclaration()!=pt[i]){
@@ -1158,7 +1158,7 @@ int main(int argc,char *argv[])
 	if((fp=fopen(argv[1],"r"))==NULL){
 		printf("Cannot Open Input File.\n"); exit(1);}
 	yyin=fp;
-	myTable -> enterScope(7);
+	myTable -> enterScope(20);
 	yyparse();
 	fprintf(parser, "SymbolTable : ");
 	myTable -> printAllST(parser);

@@ -16,7 +16,7 @@ class SymbolInfo
 private:
     string name;
     string type;
-    Function *function;
+    Method *method;
     string declaration;
 
 
@@ -26,7 +26,7 @@ public:
 
     SymbolInfo(){
         next = nullptr;
-        function = nullptr;
+        method = nullptr;
     }
 
     SymbolInfo(const string &name, const string &type){
@@ -60,8 +60,8 @@ public:
     const string &getDeclaration() const {
         return declaration;
     }
-    Function* getFunction(){
-           return function;
+    Method* getMethod(){
+           return method;
     }
     void setName(const string name) {
         SymbolInfo::name = name;
@@ -73,8 +73,8 @@ public:
         SymbolInfo::declaration = declaration;
     }
 
-    void setFunction(){
-            function = new Function();
+    void setMethod(){
+            method = new Method();
     }
 
 

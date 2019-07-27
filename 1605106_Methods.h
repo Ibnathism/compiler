@@ -1,22 +1,32 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-class Function
+class Method
         {
-        string rType;
-        int totalParameters;
+
         vector<string> parameterList;
         vector<string> parameterType;
+        
+        
+        string rType;
+        int totalParameters;
+       
         bool defined;
 
         public:
-            Function(){
+            Method(){
                 totalParameters = 0;
                 defined = false;
                 parameterList.clear();
                 parameterType.clear();
                 rType = "";
 
+            }
+            void setDefined(){
+                this->defined=true;
+            }
+            bool getDefined(){
+                return defined;
             }
             void setRType(string type){
                 this->rType=type;
@@ -41,12 +51,7 @@ class Function
             vector<string> getParameterType(){
                 return parameterType;
             }
-            void setDefined(){
-                this->defined=true;
-            }
-            bool getDefined(){
-                return defined;
-            }
+            
 
 
         };

@@ -476,7 +476,7 @@ char *yytext;
 
 extern YYSTYPE yylval;
 extern SymbolTable* table;
-extern FILE* error;
+extern FILE* errorFile;
 using namespace std;
 
 extern "C" int yylex();
@@ -779,7 +779,7 @@ case 5:
 YY_RULE_SETUP
 #line 88 "1605106.l"
 {
-	fprintf(showLog, "\nError at line %d: Too many decimal points %s\n", lines, yytext);
+	fprintf(errorFile, "\nError at line %d: Too many decimal points %s\n", lines, yytext);
 	errors++;
 	}
 	YY_BREAK
@@ -787,7 +787,7 @@ case 6:
 YY_RULE_SETUP
 #line 93 "1605106.l"
 {
-	fprintf(showLog, "\nError at line %d: Ill formed number %s\n", lines, yytext);
+	fprintf(errorFile, "\nError at line %d: Ill formed number %s\n", lines, yytext);
 	errors++;
 	}
 	YY_BREAK
@@ -805,7 +805,7 @@ case 8:
 YY_RULE_SETUP
 #line 107 "1605106.l"
 {
-	fprintf(showLog, "\nError at line %d: Unterminated string %s\n", lines, yytext);
+	fprintf(errorFile, "\nError at line %d: Unterminated string %s\n", lines, yytext);
 	errors++;
 	string str = convertSpecialCharacter(yytext);
 	}
@@ -814,7 +814,7 @@ case 9:
 YY_RULE_SETUP
 #line 113 "1605106.l"
 {
-	fprintf(showLog, "\nLine No. %d: Token <COMMENT> Lexeme %s found\n", lines, yytext);
+	fprintf(errorFile, "\nLine No. %d: Token <COMMENT> Lexeme %s found\n", lines, yytext);
 	string str = convertSpecialCharacter(yytext);
 	}
 	YY_BREAK
@@ -822,7 +822,7 @@ case 10:
 YY_RULE_SETUP
 #line 118 "1605106.l"
 {
-	fprintf(showLog, "\nError at line %d: Unterminated comment %s\n", lines, yytext);
+	fprintf(errorFile, "\nError at line %d: Unterminated comment %s\n", lines, yytext);
 	errors++;
 	string str = convertSpecialCharacter(yytext);
 	}
@@ -1027,7 +1027,7 @@ case 44:
 YY_RULE_SETUP
 #line 200 "1605106.l"
 {
-	fprintf(showLog, "\nError at line %d: Invalid prefix on ID or invalid suffix on Number %s\n", lines, yytext);
+	fprintf(errorFile, "\nError at line %d: Invalid prefix on ID or invalid suffix on Number %s\n", lines, yytext);
 	errors++;
 	}
 	YY_BREAK
@@ -1035,7 +1035,7 @@ case 45:
 YY_RULE_SETUP
 #line 205 "1605106.l"
 {
-	fprintf(showLog, "\nError at line %d: Unrecognised character %s\n", lines, yytext);
+	fprintf(errorFile, "\nError at line %d: Unrecognised character %s\n", lines, yytext);
 	errors++;
 	}
 	YY_BREAK
