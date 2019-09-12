@@ -6,8 +6,8 @@ class Method
 
         vector<string> parameterList;
         vector<string> parameterType;
-        
-        
+        vector<string> listOfVariables;
+        int scopeID;
         string rType;
         int totalParameters;
        
@@ -51,7 +51,28 @@ class Method
             vector<string> getParameterType(){
                 return parameterType;
             }
+
+            void addVariable(string s){
+                listOfVariables.push_back(s);
+            }
+
+            vector<string> getListOfVariable(){
+                return listOfVariables;
+            }
+
+            void setScopeID(int n){
+                this -> scopeID = n;
+            } 
+
+            int getScopeID(){
+                return scopeID;
+            }
             
+            void clear(){
+                parameterList.clear();
+                parameterType.clear();
+                setTotalParameters();
+            }
 
 
         };

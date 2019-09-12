@@ -137,6 +137,7 @@ UNTERMINATED_COMMENT [/][*]([^*]|([*][^/]))*[^"*/"]
 "case" {return CASE;}
 "default" {return DEFAULT;}
 "continue" {return CONTINUE;}
+"println" {return PRINTLN;}
 
 
 "+"|"-" {
@@ -151,10 +152,16 @@ UNTERMINATED_COMMENT [/][*]([^*]|([*][^/]))*[^"*/"]
 	return MULOP;
 }
 
-"++"|"--" {
+"++" {
 	SymbolInfo *si = new SymbolInfo(yytext, "INCOP");
 	yylval.var = si;
 	return INCOP;
+}
+
+"--" {
+	SymbolInfo *si = new SymbolInfo(yytext, "DECOP");
+	yylval.var = si;
+	return DECOP;
 }
 
 "<"|"<="|">"|">="|"=="|"!=" {

@@ -105,6 +105,8 @@ Maintained by Magnus Ekdahl <magnus@debian.org>
 #include<cstring>
 #include<cmath>
 #include<cstdio>
+#include <limits>
+#include <sstream>
 #include<vector>
 #include "1605106_SymbolTable.h"
 using namespace std;
@@ -112,9 +114,11 @@ int yyparse(void);
 extern "C" int yylex(void);
 extern FILE *yyin;
 
+vector<string> declaredVariables;
+vector<string> declaredFunctions;
+vector<pair<string, string>> declaredArrays;
 
-
-
+string global;
 vector<SymbolInfo*> parameters;
 vector<SymbolInfo*> declarations;
 vector<SymbolInfo*> arguments;
@@ -123,8 +127,8 @@ vector<SymbolInfo*> arguments;
 
 
 
-FILE *parser = fopen("1605106_log.txt", "w");
-FILE *errorFile = fopen("1605106_error.txt", "w");
+FILE *parser = fopen("1605106_info.txt", "w");
+FILE *errorFile = fopen("1605106_log.txt", "w");
 FILE *fp;
 
 
@@ -136,8 +140,39 @@ int errors = 0;
 
 void yyerror(char *s){cerr << "Line no" << lines << endl;}
 
+int labelCount=0;
+int tempCount=0;
 
-#line 60 "1605106.y"
+char *newTemp()
+{
+	char *temp= new char[4];
+	strcpy(temp,"t");
+	char array[3];
+	sprintf(array,"%d", tempCount);
+	tempCount++;
+	strcat(temp,array);
+	return temp;
+}
+
+char *newLabel()
+{
+	char *label= new char[4];
+	strcpy(label,"L");
+	char array[3];
+	sprintf(array,"%d", labelCount);
+	labelCount++;
+	strcat(label,array);
+	return label;
+}
+
+
+
+void optimize(FILE *asmcode);
+
+
+
+
+#line 95 "1605106.y"
 typedef union
 {
     SymbolInfo* var;
@@ -692,13 +727,13 @@ static const short yyrhs[] = {    44,
 
 #if (YY_parse_DEBUG != 0) || defined(YY_parse_ERROR_VERBOSE) 
 static const short yyrline[] = { 0,
-    68,    72,    76,    82,    88,    94,   100,   158,   211,   273,
-   287,   323,   335,   344,   355,   367,   380,   387,   401,   421,
-   460,   467,   474,   483,   493,   504,   514,   526,   535,   546,
-   555,   564,   573,   589,   603,   619,   633,   642,   663,   672,
-   683,   711,   760,   769,   801,   811,   833,   842,   861,   871,
-   893,   903,   954,   981,  1004,  1014,  1023,  1073,  1082,  1091,
-  1100,  1109,  1121,  1128,  1135,  1143
+   103,   123,   128,   135,   143,   150,   157,   215,   268,   343,
+   388,   420,   465,   474,   485,   497,   510,   525,   536,   560,
+   608,   615,   622,   631,   641,   652,   662,   674,   684,   697,
+   706,   715,   724,   753,   775,   801,   825,   846,   873,   882,
+   894,   928,   997,  1010,  1051,  1065,  1102,  1115,  1156,  1167,
+  1218,  1232,  1319,  1348,  1372,  1386,  1411,  1476,  1489,  1505,
+  1520,  1550,  1582,  1591,  1598,  1609
 };
 
 static const char * const yytname[] = {   "$","error","$illegal.","IF","ELSE",
@@ -1312,52 +1347,74 @@ YYLABEL(yyreduce)
   switch (yyn) {
 
 case 1:
-#line 68 "1605106.y"
+#line 103 "1605106.y"
 { 
+	if(errors==0){
+		string assembly = ".MODEL SMALL\n\.STACK 100H\n\.DATA";
+		for(int i=0; i<declaredVariables.size();i++){
+			assembly = assembly + "\n"+declaredVariables[i]+" dw ?";
+		}
+		for(int i=0;i<declaredArrays.size();i++){
+			assembly = assembly+"\n"+declaredArrays[i].first+" dw "+declaredArrays[i].second+" dup(?)";
+		}
+		assembly = assembly + "\n.CODE\n" + yyvsp[0].var -> getAssembly()+"\nOUTDEC PROC  \n PUSH AX \nPUSH BX \nPUSH CX \nPUSH DX  \nCMP AX,0 \nJGE BEGIN \nPUSH AX \nMOV DL,'-' \nMOV AH,2 \nINT 21H \nPOP AX \nNEG AX \n\n BEGIN: \nXOR CX,CX \nMOV BX,10 \n\nREPEAT: \nXOR DX,DX \nDIV BX \nPUSH DX \nINC CX \nOR AX,AX \nJNE REPEAT \nMOV AH,2 \n\nPRINT_LOOP: \nPOP DX \nADD DL,30H \nINT 21H \nLOOP PRINT_LOOP \n\nMOV AH,2\nMOV DL,10\nINT 21H\n\nMOV DL,13\nINT 21H\n\nPOP DX \n POP CX \n POP BX \n POP AX \n ret \nOUTDEC ENDP \nEND MAIN\n";
+		yyvsp[0].var -> setAssembly(assembly);
+		FILE *asmConverted = fopen("code.asm", "w");
+		fprintf(asmConverted, "%s", yyvsp[0].var -> getAssembly().c_str());
+		fclose(asmConverted);
+		asmConverted = fopen("code.asm","r");
+		optimize(asmConverted);
+	}
 ;
     break;}
 case 2:
-#line 72 "1605106.y"
+#line 123 "1605106.y"
 {
 	fprintf(parser, "At line no : %d program : program unit\n\n", lines);
 	yyval.var = new SymbolInfo(); yyval.var -> setName(yyvsp[-1].var -> getName() + yyvsp[0].var -> getName()); fprintf(parser, "%s %s\n\n", yyvsp[-1].var -> getName().c_str(), yyvsp[0].var -> getName().c_str());
+	yyval.var -> setAssembly(yyvsp[-1].var -> getAssembly()+yyvsp[0].var -> getAssembly());
 ;
     break;}
 case 3:
-#line 76 "1605106.y"
+#line 128 "1605106.y"
 {
 	fprintf(parser, "At line no : %d program : unit\n\n", lines);
 	yyval.var = new SymbolInfo(); yyval.var -> setName(yyvsp[0].var -> getName()); fprintf(parser, "%s\n\n", yyvsp[0].var -> getName().c_str());
+	yyval.var -> setAssembly(yyvsp[0].var -> getAssembly());
 ;
     break;}
 case 4:
-#line 82 "1605106.y"
+#line 135 "1605106.y"
 { 
 	fprintf(parser, "At line no : %d unit : var_declaration\n\n", lines);
 	yyval.var = new SymbolInfo();
+	declaredFunctions.clear();
+	yyval.var -> setAssembly(yyvsp[0].var -> getAssembly());
 	yyval.var -> setName(yyvsp[0].var -> getName()+"\n");fprintf(parser, "%s\n\n", yyvsp[0].var -> getName().c_str());
 	
 ;
     break;}
 case 5:
-#line 88 "1605106.y"
+#line 143 "1605106.y"
 {
 	fprintf(parser, "At line no : %d unit : func_declaration\n\n", lines);
 	yyval.var = new SymbolInfo();
+	yyval.var -> setAssembly(yyvsp[0].var -> getAssembly());
 	yyval.var -> setName(yyvsp[0].var -> getName() + "\n"); fprintf(parser, "%s\n\n", yyvsp[0].var -> getName().c_str());
 	
 ;
     break;}
 case 6:
-#line 94 "1605106.y"
+#line 150 "1605106.y"
 {
 	fprintf(parser, "At line no : %d unit : func_definition\n\n", lines);
 	yyval.var = new SymbolInfo();
+	yyval.var -> setAssembly(yyvsp[0].var -> getAssembly());
 	yyval.var -> setName(yyvsp[0].var -> getName() + "\n"); fprintf(parser, "%s\n\n", yyvsp[0].var -> getName().c_str());
 ;
     break;}
 case 7:
-#line 100 "1605106.y"
+#line 157 "1605106.y"
 {
 	fprintf(parser, "At line no : %d func_declaration : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1418,7 +1475,7 @@ case 7:
 ;
     break;}
 case 8:
-#line 158 "1605106.y"
+#line 215 "1605106.y"
 {
 	fprintf(parser, "At line no : %d func_declaration : type_specifier ID LPAREN RPAREN SEMICOLON\n\n", lines);
 	fprintf(parser, "%s %s();\n\n", yyvsp[-4].var -> getName().c_str(), yyvsp[-3].var -> getName().c_str());
@@ -1473,12 +1530,15 @@ case 8:
 ;
     break;}
 case 9:
-#line 211 "1605106.y"
+#line 268 "1605106.y"
 {
 	yyval.var = new SymbolInfo();
 	string name2 = yyvsp[-3].var->getName();
+	//cout << "line " << lines << " " <<name2<< endl;
 	SymbolInfo *temp = myTable->lookUp(name2);
+	//cout << temp-> getName() << " line " << lines << endl;
 	if(temp != 0){
+		//cout << "line yay " << lines << " " <<name2<< endl;
 		bool def = temp->getMethod()->getDefined();
 		if(def != 0){
 			fprintf(errorFile,"Error at Line %d : Multiple definition of function %s\n\n",lines, yyvsp[-3].var->getName().c_str());
@@ -1486,20 +1546,13 @@ case 9:
 		}
 		else {
 			if(temp -> getMethod() -> getTotalParameters() != parameters.size()){
-				
 				fprintf(errorFile,"Error at Line %d : Invalid number of parameters \n\n",lines);
-
 				errors++;
 			}
 			else {
-				
-				
 				vector<string>pType = temp -> getMethod()-> getParameterType();
 				int limit = parameters.size();
-
-
 				for(int i=0; i<limit; i++) {
-					//Type Mismatch checking 
 					string paramDec = parameters[i] -> getDeclaration();
 					if(paramDec != pType[i]){
 						fprintf(errorFile, "Error at Line %d : Type Mismatch \n\n",lines);
@@ -1514,57 +1567,105 @@ case 9:
 					errors++;
 				}
 			}
-			//the Method must set defined
+			temp -> getMethod() -> clear();
+			for(int i=0; i<parameters.size();i++){
+				int c = myTable -> currentScopeID + 1;
+				ostringstream a;
+				a<<c;
+				string s = a.str(); 
+				string name = parameters[i] -> getName() + s;
+				//cout << "line " << lines << " " <<name<< endl;
+				string type = parameters[i] -> getDeclaration();
+				temp -> getMethod() -> addParameter(name, type);
+			}
 			temp -> getMethod() -> setDefined();
-
-			
 		}
-		
 	}
 	else {
-		string name2 = yyvsp[-3].var -> getName();string type = "ID";string dec = "Method";myTable -> insert(name2, type, dec);
+		string type = "ID";string dec = "Method";
+		//cout <<" name " << name2 <<  myTable -> insert(name2, type, dec) << endl;
+		myTable -> insert(name2, type, dec);
 		temp = myTable -> lookUp(name2);
+		//cout << temp -> getName() << endl;
 		temp -> setMethod();
 		temp -> getMethod() -> setDefined();
 		int limit = parameters.size();
 		string returnType = yyvsp[-4].var -> getName();
 		//cout << "LIMIT " << limit << endl;
 		for(int i=0; i<limit; i++){ 
-			string paramName = parameters[i] -> getName();
+			int c = myTable -> currentScopeID + 1;
+			ostringstream a;
+			a<<c;
+			string s = a.str(); 
+			string paramName = parameters[i] -> getName() + s;
 			string paramDec = parameters[i] -> getDeclaration();
+			//cout << "line " << lines << " " <<paramName<< endl;
 			temp -> getMethod() -> addParameter(paramName, paramDec);
 			}
 		temp -> getMethod() -> setRType(returnType);
 	}
+	global = name2;
+	declaredVariables.push_back(global+"_return");
 ;
     break;}
 case 10:
-#line 273 "1605106.y"
+#line 343 "1605106.y"
 {
 	string v1 = yyvsp[-6].var -> getName();
 	string v2 = yyvsp[-5].var -> getName();
 	string v4 = yyvsp[-3].var -> getName();
 	string v7 = yyvsp[0].var -> getName(); 
-	
-	
-	
 	string var = v1 + " " + v2 + "(" + v4 + ")" + v7;
 	fprintf(parser, "At line no : %d func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n\n", lines);
 	fprintf(parser, "%s %s(%s) %s\n\n", yyvsp[-6].var -> getName().c_str(), yyvsp[-5].var -> getName().c_str(), yyvsp[-3].var -> getName().c_str(), yyvsp[0].var -> getName().c_str());
+	yyval.var -> setAssembly(v2+" PROC");
+	if(v2=="main"){
+		string assembly = yyval.var -> getAssembly() + " \nMOV AX,@DATA\nMOV DS,AX\n"+ yyvsp[0].var -> getAssembly();
+		assembly = assembly + "\nLReturn" + global + ":\nMOV AH,4CH\nINT 21H";
+		yyval.var -> setAssembly(assembly);
+	}
+	else{
+		SymbolInfo *temp = myTable -> lookUp(v2);
+		for(int i = 0;i<declaredFunctions.size();i++){
+			temp -> getMethod() -> addVariable(declaredFunctions[i]);
+		}
+		declaredFunctions.clear();
+		vector<string> variableList = temp -> getMethod() -> getListOfVariable();
+		string assembly = yyval.var -> getAssembly() + "\nPUSH AX\nPUSH BX\nPUSH CX\nPUSH DX";
+		vector<string> parameterList = temp -> getMethod() -> getParameterList();
+		int psize = parameterList.size();
+		int vsize = variableList.size();
+		for(int i=0; i<psize;i++){
+			//cout << parameterList[i] << endl;
+			assembly = assembly + "\nPUSH "+ parameterList[i];
+		}
+		for(int i=0; i<vsize;i++){
+			assembly = assembly + "\nPUSH " + variableList[i];
+		}
+		assembly = assembly + yyvsp[0].var -> getAssembly() + "\nLReturn"+global+":";
+		for(int i=vsize-1; i>=0; i--){
+			assembly = assembly + "\nPOP " + variableList[i];
+		}
+		for(int i=psize-1; i>=0; i--){
+			assembly = assembly + "\nPOP " + parameterList[i];
+		}
+		assembly = assembly + "\nPOP AX\nPOP BX\nPOP CX\nPOP DX\nRET\n";
+		yyval.var -> setAssembly(assembly+v2+ " ENDP\n");
+	}
 	yyval.var -> setName(var);
 	//cout << $<var>1 -> getName() << endl;
 ;
     break;}
 case 11:
-#line 287 "1605106.y"
+#line 388 "1605106.y"
 {
 	yyval.var = new SymbolInfo();
-	string name = yyvsp[-2].var -> getName();
+	string name2 = yyvsp[-2].var -> getName();
 	string name1 = yyvsp[-3].var -> getName();
-	SymbolInfo *temp = myTable -> lookUp(name);
+	SymbolInfo *temp = myTable -> lookUp(name2);
 	if(temp == 0){
-		myTable -> insert(name, "ID", "Method");
-		temp = myTable -> lookUp(name);
+		myTable -> insert(name2, "ID", "Method");
+		temp = myTable -> lookUp(name2);
 		temp -> setMethod();
 		temp -> getMethod() -> setDefined();
 		temp -> getMethod() -> setRType(name1);
@@ -1576,40 +1677,69 @@ case 11:
 			fprintf(errorFile,"Error at Line %d : Invalid number of parameters \n\n",lines);
 			errors++;
 		}
-		if(returnType != yyvsp[-3].var -> getName()){
+		if(returnType != name1){
 			fprintf(errorFile,"Error at Line %d : Return Type Mismatch \n\n",lines);
 			errors++;
 		}
 		temp -> getMethod() -> setDefined();
 	}
-
-	
-	
-	else {
-		
+	else {	
 		fprintf(errorFile,"Error at Line %d : Multiple definition of function %s\n\n",lines, yyvsp[-2].var->getName().c_str());
-		
-		
 		errors++;
-		
 		}
+	global = name2;
+	declaredVariables.push_back(global+"_return");
+	yyvsp[-3].var -> setName(name1+" "+name2+"()");
 ;
     break;}
 case 12:
-#line 323 "1605106.y"
+#line 420 "1605106.y"
 {
 	fprintf(parser, "At line no : %d func_definition : type_specifier ID LPAREN RPAREN compound_statement\n", lines);
 	fprintf(parser, "%s %s() %s\n\n", yyvsp[-5].var -> getName().c_str(),yyvsp[-4].var -> getName().c_str() ,yyvsp[0].var -> getName().c_str());
 	string name1 = yyvsp[-5].var -> getName();
-	
-	
 	string name2 = yyvsp[-4].var -> getName();
 	string name6 = yyvsp[0].var -> getName();
+	yyval.var -> setAssembly(name2+" PROC");
+	if(name2=="main"){
+		string assembly = yyval.var -> getAssembly() + " \nMOV AX,@DATA\nMOV DS,AX\n"+ yyvsp[0].var -> getAssembly();
+		assembly = assembly + "\nLReturn" + global + ":\nMOV AH,4CH\nINT 21H";
+		yyval.var -> setAssembly(assembly);
+	}
+	else{
+		SymbolInfo *temp = myTable -> lookUp(name2);
+		int ds = declaredFunctions.size();
+		for(int i = 0;i<ds;i++){
+			temp -> getMethod() -> addVariable(declaredFunctions[i]);
+		}
+		declaredFunctions.clear();
+		vector<string> variableList = temp -> getMethod() -> getListOfVariable();
+		string assembly = yyval.var -> getAssembly() + "\nPUSH AX\nPUSH BX\nPUSH CX\nPUSH DX";
+		vector<string> parameterList = temp -> getMethod() -> getParameterList();
+		int psize = parameterList.size();
+		int vsize = variableList.size();
+		for(int i=0; i<psize;i++){
+			assembly = assembly + "\nPUSH "+ parameterList[i];
+		}
+		for(int i=0; i<vsize;i++){
+			assembly = assembly + "\nPUSH " + variableList[i];
+		}
+		assembly = assembly + yyvsp[0].var -> getAssembly() + "\nLReturn"+global+":";
+		for(int i=vsize-1; i>=0; i--){
+			assembly = assembly + "\nPOP " + variableList[i];
+		}
+		for(int i=psize-1; i>=0; i--){
+			assembly = assembly + "\nPOP " + parameterList[i];
+		}
+		
+		assembly = assembly + "\nPOP AX\nPOP BX\nPOP CX\nPOP DX\nRET\n";
+		yyval.var -> setAssembly(assembly+name2+ " ENDP\n");
+	}
 	yyval.var -> setName(name1 +name2+"()"+ name6);
 ;
     break;}
 case 13:
-#line 335 "1605106.y"
+#line 465 "1605106.y"
 {
 	fprintf(parser, "At line no : %d parameter_list : parameter_list COMMA type_specifier ID\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1621,7 +1751,7 @@ case 13:
 ;
     break;}
 case 14:
-#line 344 "1605106.y"
+#line 474 "1605106.y"
 {
 	fprintf(parser, "At line no : %d parameter_list : parameter_list COMMA type_specifier\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1635,7 +1765,7 @@ case 14:
 ;
     break;}
 case 15:
-#line 355 "1605106.y"
+#line 485 "1605106.y"
 {
 	
 	
@@ -1650,7 +1780,7 @@ case 15:
 ;
     break;}
 case 16:
-#line 367 "1605106.y"
+#line 497 "1605106.y"
 {
 	fprintf(parser, "At line no : %d parameter_list : type_specifier\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1664,44 +1794,53 @@ case 16:
 ;
     break;}
 case 17:
-#line 380 "1605106.y"
+#line 510 "1605106.y"
 {
 	myTable -> enterScope(7, parser);
 	int limit = parameters.size();
 	for(int i=0; i < limit; i++){
-		myTable -> insert(parameters[i]->getName(), "ID", parameters[i] -> getDeclaration());
+		string paraName = parameters[i]->getName();
+		string paraType = parameters[i] -> getDeclaration();
+		int c = myTable -> currentScopeID;
+		ostringstream a;
+		a<<c;
+		string s = a.str(); 
+		//cout << s;
+		myTable -> insert(paraName, "ID", paraType);
+		declaredVariables.push_back(paraName+s);
 	}
 	parameters.clear();
 ;
     break;}
 case 18:
-#line 387 "1605106.y"
+#line 525 "1605106.y"
 {
-	
-	
-	
 	fprintf(parser, "At line no : %d compound_statement : LCURL statements RCURL\n\n", lines);
 	yyval.var = new SymbolInfo();
-
-	yyval.var -> setName("{\n" + yyvsp[-1].var -> getName() + "\n}");
-
+	string name3 = yyvsp[-1].var -> getName();
+	string a3 = yyvsp[-1].var -> getAssembly();
+	yyval.var -> setName("{\n" + name3 + "\n}");
+	yyval.var -> setAssembly(a3);
 	fprintf(parser, "{\n%s\n}\n\n", yyvsp[-1].var -> getName().c_str());
-	
-	myTable -> printAllST(parser);
+	//myTable -> printAllST(parser);
 	myTable -> exitScope(parser);
 ;
     break;}
 case 19:
-#line 401 "1605106.y"
+#line 536 "1605106.y"
 {
 	myTable -> enterScope(7, parser);
 	int limit = parameters.size();
-
 	for(int i=0; i < limit; i++){
 		string dec = parameters[i] -> getDeclaration();
 		string name = parameters[i]->getName();
 		string type = "ID";
 		myTable -> insert(name, type, dec);
+		int c = myTable -> currentScopeID;
+		ostringstream a;
+		a<<c;
+		string s = a.str();
+		declaredVariables.push_back(name+s);
 	}
 	parameters.clear();
 	fprintf(parser, "At line no : %d compound_statement : LCURL RCURL\n\n", lines);
@@ -1713,14 +1852,15 @@ case 19:
 ;
     break;}
 case 20:
-#line 421 "1605106.y"
+#line 560 "1605106.y"
 {
 	fprintf(parser, "At line no : %d var_declaration : type_specifier declaration_list SEMICOLON\n\n", lines);
 	yyval.var = new SymbolInfo();
 	fprintf(parser, "%s %s;\n\n", yyvsp[-2].var->getName().c_str(), yyvsp[-1].var->getName().c_str());
-	string name = yyvsp[-2].var -> getName();
+	string name1 = yyvsp[-2].var -> getName();
+	string name2 = yyvsp[-1].var -> getName();
 	string v = "void ";
-	if(name == v){
+	if(name1 == v){
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
 
 		errors++;
@@ -1736,24 +1876,32 @@ case 20:
 				errors++;
 				continue;
 			}
-			if(decSize != 3){
-				myTable -> insert(decName, decType, yyvsp[-2].var -> getName());
+			int c = myTable -> currentScopeID;
+			ostringstream a;
+			a<<c;
+			string s = a.str();
+			string part1 = decName+s;
+			string part2 = decType.substr(2, decType.size()-1);
+			if(decSize <= 2){
+				myTable -> insert(decName, decType, name1);
+				declaredFunctions.push_back(part1);
+				declaredVariables.push_back(part1);
 			}
 			else {
-				string s = declarations[i] -> getType().substr(0, declarations[i] -> getType().size()-1);
-				declarations[i] -> setType(s);
-				myTable -> insert(decName, decType, yyvsp[-2].var -> getName()+"array");
+				pair<string,string> temp = make_pair(part1, part2);
+				declaredArrays.push_back(temp);
+				string s1 = decType.substr(0, declarations[i] -> getType().size()-1);
+				declarations[i] -> setType(s1);
+				myTable -> insert(decName, decType, name1+"array");
 			}
 		}
 	}
-	string name1 = yyvsp[-2].var -> getName();
-	string name2 = yyvsp[-1].var -> getName();
 	declarations.clear();
 	yyval.var -> setName(name1 + " " + name2 + ";");
 ;
     break;}
 case 21:
-#line 460 "1605106.y"
+#line 608 "1605106.y"
 {
 	fprintf(parser, "At line no : %d type_specifier : INT\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1763,7 +1911,7 @@ case 21:
 ;
     break;}
 case 22:
-#line 467 "1605106.y"
+#line 615 "1605106.y"
 {
 	fprintf(parser, "At line no : %d type_specifier : FLOAT\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1773,7 +1921,7 @@ case 22:
 ;
     break;}
 case 23:
-#line 474 "1605106.y"
+#line 622 "1605106.y"
 {
 	fprintf(parser, "At line no : %d type_specifier : VOID \n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1783,7 +1931,7 @@ case 23:
 ;
     break;}
 case 24:
-#line 483 "1605106.y"
+#line 631 "1605106.y"
 {
 	fprintf(parser, "At line no : %d declaration_list : declaration_list COMMA ID\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1796,21 +1944,21 @@ case 24:
 ;
     break;}
 case 25:
-#line 493 "1605106.y"
+#line 641 "1605106.y"
 {
 	fprintf(parser, "At line no : %d declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD\n\n", lines);
 	yyval.var = new SymbolInfo();
 
 	yyval.var -> setName(yyvsp[-5].var -> getName() + "," + yyvsp[-3].var -> getName() + "[" + yyvsp[-1].var -> getName() + "]");
 	string  n3 = yyvsp[-3].var -> getName();
-	string type =  "IDa";
+	string type =  "ID"+yyvsp[-1].var->getName();
 	fprintf(parser, "%s,%s[%s]\n\n", yyvsp[-5].var -> getName().c_str(), yyvsp[-3].var -> getName().c_str(), yyvsp[-1].var -> getName().c_str());
 	declarations.push_back(new SymbolInfo(n3,type));
 	
 ;
     break;}
 case 26:
-#line 504 "1605106.y"
+#line 652 "1605106.y"
 {
 	fprintf(parser, "At line no : %d declaration_list : ID\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1823,44 +1971,47 @@ case 26:
 ;
     break;}
 case 27:
-#line 514 "1605106.y"
+#line 662 "1605106.y"
 {
 	fprintf(parser, "At line no : %d declaration_list : ID LTHIRD CONST_INT RTHIRD\n\n", lines);
 	yyval.var = new SymbolInfo();
 	yyval.var -> setName(yyvsp[-3].var -> getName() + "[" + yyvsp[-1].var -> getName() + "]");
 	fprintf(parser, "%s[%s]\n\n", yyvsp[-3].var -> getName().c_str(), yyvsp[-1].var -> getName().c_str());
 	string  n1 = yyvsp[-3].var -> getName();
-	string type =  "IDa";
+	string type =  "ID"+yyvsp[1].var -> getName();
 	declarations.push_back(new SymbolInfo(n1, type));
 	
 ;
     break;}
 case 28:
-#line 526 "1605106.y"
+#line 674 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statements : statement\n\n", lines);
 	yyval.var = new SymbolInfo();
-
+	string a1 = yyvsp[0].var -> getAssembly();
 	yyval.var -> setName(yyvsp[0].var -> getName());
 
-	fprintf(parser, "%s\n\n", yyvsp[0].var -> getName().c_str());	
+	fprintf(parser, "%s\n\n", yyvsp[0].var -> getName().c_str());
+	yyval.var -> setAssembly(a1);	
 	
 ;
     break;}
 case 29:
-#line 535 "1605106.y"
+#line 684 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statements : statements statement\n\n", lines);
 	yyval.var = new SymbolInfo();
 
+	string a1 = yyvsp[-1].var -> getAssembly();
+	string a2 = yyvsp[0].var -> getAssembly();
 	yyval.var -> setName(yyvsp[-1].var -> getName() + "\n" + yyvsp[0].var -> getName());
 
 	fprintf(parser, "%s \n%s\n\n", yyvsp[-1].var -> getName().c_str(), yyvsp[0].var -> getName().c_str());
-	
+	yyval.var -> setAssembly(a1+a2);
 ;
     break;}
 case 30:
-#line 546 "1605106.y"
+#line 697 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statement : var_declaration\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1872,54 +2023,70 @@ case 30:
 ;
     break;}
 case 31:
-#line 555 "1605106.y"
+#line 706 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statement : expression_statement\n\n", lines);
 	yyval.var = new SymbolInfo();
 
 	yyval.var -> setName(yyvsp[0].var -> getName());
-
+	yyval.var -> setAssembly(yyvsp[0].var -> getAssembly());
 	fprintf(parser, "%s\n\n", yyvsp[0].var -> getName().c_str());
 	
 ;
     break;}
 case 32:
-#line 564 "1605106.y"
+#line 715 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statement : compound_statement\n\n", lines);
 	yyval.var = new SymbolInfo();
 
 	yyval.var -> setName(yyvsp[0].var -> getName());
-
+	yyval.var -> setAssembly(yyvsp[0].var -> getAssembly());
 	fprintf(parser, "%s\n\n", yyvsp[0].var -> getName().c_str());
 	
 ;
     break;}
 case 33:
-#line 573 "1605106.y"
+#line 724 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement\n\n", lines);
 	yyval.var = new SymbolInfo();
 	string v = "void ";
+	string name3 = yyvsp[-4].var -> getName();
+	string name4 = yyvsp[-3].var -> getName();
+	string name5 = yyvsp[-2].var -> getName();
+	string name7 = yyvsp[0].var -> getName();
+	string a3 = yyvsp[-4].var -> getAssembly();
+	string a4 = yyvsp[-3].var -> getAssembly();
+	string a5 = yyvsp[-2].var -> getAssembly();
+	string a7 = yyvsp[0].var -> getAssembly();
+	string un4 = yyvsp[-3].var -> getUnique();
 	string dec3 = yyvsp[-4].var -> getDeclaration();
 	fprintf(parser, "for(%s %s %s)\n%s\n", yyvsp[-4].var -> getName().c_str(), yyvsp[-3].var -> getName().c_str(), yyvsp[-2].var -> getName().c_str(), yyvsp[0].var -> getName().c_str());
 	if(dec3 == v){
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
 		errors++;
 	}
-	string name3 = yyvsp[-4].var -> getName();
-	string name4 = yyvsp[-3].var -> getName();
-	string name5 = yyvsp[-2].var -> getName();
-	string name7 = yyvsp[0].var -> getName();
+	else{
+		char *l1 = newLabel();
+		char *l2 = newLabel();
+		string assembly = a3+"\n"+string(l1)+":\n"+a4+"\nMOV AX,"+un4+"\nCMP AX,0\nJE "+string(l2)+"\n"+a7+a5+"\nJMP "+string(l1)+"\n"+string(l2)+":";
+		//cout << "line " << lines << " " << string(l1) << " " << string(l2);
+		yyval.var -> setAssembly(assembly);
+	}
+
 	yyval.var -> setName("for(" + name3 + name4 + name5 +")" + "\n" + name7);
 ;
     break;}
 case 34:
-#line 589 "1605106.y"
+#line 753 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statement : IF LPAREN expression RPAREN statement\n\n", lines);
 	yyval.var = new SymbolInfo();
 	string v = "void ";
+	string un3 = yyvsp[-2].var -> getUnique();
+	string a3 = yyvsp[-2].var -> getAssembly();
+	string a5 = yyvsp[0].var -> getAssembly();
 	fprintf(parser, "if(%s)\n %s \n\n", yyvsp[-2].var -> getName().c_str(), yyvsp[0].var -> getName().c_str());
 	if(yyvsp[-2].var -> getDeclaration() == v){
 		
@@ -1927,12 +2094,17 @@ case 34:
 
 		errors++;
 	}
+	else{
+		char *l1 = newLabel();
+		string assembly = a3+"\nMOV AX,"+un3+"\nCMP AX,0\nJE "+string(l1)+"\n"+a5+"\n"+string(l1)+":";
+		yyval.var -> setAssembly(assembly);
+	}
 	yyval.var -> setName("if(" + yyvsp[-2].var -> getName()+ ")" + "\n" + yyvsp[0].var -> getName());
 
 ;
     break;}
 case 35:
-#line 603 "1605106.y"
+#line 775 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statement : IF LPAREN expression RPAREN statement ELSE statement\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -1940,23 +2112,36 @@ case 35:
 	
 	string v = "void ";
 	string dec = yyvsp[-4].var -> getDeclaration();
-
+	string un3 = yyvsp[-4].var -> getUnique();
+	string a3 = yyvsp[-4].var -> getAssembly();
+	string a5 = yyvsp[-2].var -> getAssembly();
+	string a7 = yyvsp[0].var -> getAssembly();
 	if(dec == v){
 		
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
 
 		errors++;
 	}
+	else{
+		char *l1 = newLabel();
+		char *l2 = newLabel();
+		string assembly = a3+"\nMOV AX,"+un3+"\nCMP AX,0\nJE "+string(l1)+"\n"+a5+"\nJMP "+string(l2)+"\n"+string(l1)+":\n"+a7+"\n"+string(l2)+":";
+		//cout << "line " << lines << " " << string(l1) << " " << string(l2);
+		yyval.var -> setAssembly(assembly);
+	}
 	yyval.var -> setName("if(" + yyvsp[-4].var -> getName()+ ")" + "\n" + yyvsp[-2].var -> getName() + "\n" + "else" + "\n" + yyvsp[0].var -> getName());
 ;
     break;}
 case 36:
-#line 619 "1605106.y"
+#line 801 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statement : WHILE LPAREN expression RPAREN statement\n\n", lines);
 	yyval.var = new SymbolInfo();
 	fprintf(parser, "while(%s)\n %s \n\n", yyvsp[-2].var -> getName().c_str(), yyvsp[0].var -> getName().c_str());
 	string v = "void ";
+	string un3 = yyvsp[-2].var -> getUnique();
+	string a3 = yyvsp[-2].var -> getAssembly();
+	string a5 = yyvsp[0].var -> getAssembly();
 	string dec = yyvsp[-2].var -> getDeclaration();
 	if(dec == v){
 		
@@ -1964,28 +2149,49 @@ case 36:
 
 		errors++;
 	}
+	else{
+		char *l1 = newLabel();
+		char *l2 = newLabel();
+		string assembly = "\n"+string(l1)+":\n"+a3+"\nMOV AX,"+un3+"\nCMP AX,0\nJE "+string(l2)+"\n"+a5+"\nJMP "+string(l1)+"\n"+string(l2)+":\n";
+		//cout << "line " << lines << " " << string(l1) << " " << string(l2);
+		yyval.var -> setAssembly(assembly);
+	}
 	yyval.var -> setName("while(" + yyvsp[-2].var -> getName()+ ")" + "\n" + yyvsp[0].var -> getName());
 ;
     break;}
 case 37:
-#line 633 "1605106.y"
+#line 825 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statement : PRINTLN LPAREN ID RPAREN SEMICOLON\n\n", lines);
 	yyval.var = new SymbolInfo();
-	
-	yyval.var -> setName("\n(" + yyvsp[-2].var -> getName()+ ")" + ";");
+	string assembly = "";
+	string name3 = yyvsp[-2].var -> getName();
+	yyval.var -> setName("println(" + name3+ ")" + ";");
 
-	fprintf(parser, "\n (%s); \n\n", yyvsp[-2].var -> getName().c_str());
-	
+	fprintf(parser, "\nprintln(%s); \n\n", yyvsp[-2].var -> getName().c_str());
+	if(myTable -> getScopeID(name3)==-1){
+		fprintf(errorFile, "Error at Line %d : Undeclared variable : %s\n\n", lines, yyvsp[-2].var->getName().c_str());
+		errors++;
+	}
+	else{
+		int i = myTable -> getScopeID(name3);
+		ostringstream a;
+		a<<i;
+		string s = a.str();
+		assembly = "\nMOV AX,"+name3+s+"\nCALL OUTDEC";
+	}
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 case 38:
-#line 642 "1605106.y"
+#line 846 "1605106.y"
 {
 	fprintf(parser, "At line no : %d statement : RETURN expression SEMICOLON\n\n", lines);
 	yyval.var = new SymbolInfo();
 	fprintf(parser, "return %s;\n\n", yyvsp[-1].var -> getName().c_str());
 	string dec2 = yyvsp[-1].var -> getDeclaration();
+	string a2 = yyvsp[-1].var -> getAssembly();
+	string un2 = yyvsp[-1].var -> getUnique();
 	string v = "void ";
 	string i ="int ";
 	if(dec2 == v){
@@ -1998,11 +2204,15 @@ case 38:
 		errors++;
 		
 	}
+	else{
+		string assembly = a2 + "\nMOV AX,"+un2+"\nMOV "+global+"_return,AX"+"\nJMP LReturn"+global;
+		yyval.var -> setAssembly(assembly);
+	}
 	yyval.var -> setName("return " + yyvsp[-1].var -> getName()+ ";");
 ;
     break;}
 case 39:
-#line 663 "1605106.y"
+#line 873 "1605106.y"
 {
 	fprintf(parser, "At line no : %d expression_statement : SEMICOLON\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2014,7 +2224,7 @@ case 39:
 ;
     break;}
 case 40:
-#line 672 "1605106.y"
+#line 882 "1605106.y"
 {
 	fprintf(parser, "At line no : %d expression_statement : expression SEMICOLON\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2022,11 +2232,12 @@ case 40:
 	yyval.var -> setName(yyvsp[-1].var -> getName()+ ";");
 
 	fprintf(parser, "%s ;\n\n", yyvsp[-1].var -> getName().c_str());
-	
+	yyval.var -> setUnique(yyvsp[-1].var->getUnique());
+	yyval.var -> setAssembly(yyvsp[-1].var->getAssembly());
 ;
     break;}
 case 41:
-#line 683 "1605106.y"
+#line 894 "1605106.y"
 {
 	fprintf(parser, "At line no : %d variable : ID\n\n", lines);
 
@@ -2035,6 +2246,11 @@ case 41:
 	string variableName = yyvsp[0].var -> getName();
 	if(myTable -> lookUp(variableName) != 0){
 		yyval.var -> setDeclaration(myTable -> lookUp(yyvsp[0].var -> getName()) -> getDeclaration());
+		int i = myTable -> getScopeID(variableName);
+		ostringstream a;
+		a<<i;
+		string s = a.str();
+		yyval.var -> setUnique(variableName+s);
 	}
 	if(myTable -> lookUp(yyvsp[0].var -> getName()) == 0){
 		
@@ -2051,13 +2267,14 @@ case 41:
 	
 
 
-	yyval.var -> setName(yyvsp[0].var -> getName());
+	yyval.var -> setType("notarray");
+;	yyval.var -> setName(yyvsp[0].var -> getName());
 
 
 ;
     break;}
 case 42:
-#line 711 "1605106.y"
+#line 928 "1605106.y"
 {
 
 
@@ -2071,6 +2288,10 @@ case 42:
 	string fa = "float array";
 	string ia = "int array";
 	string i = "int ";
+	string n1 = yyvsp[-3].var -> getName();
+	string n3 = yyvsp[-1].var -> getName();
+	string a3 = yyvsp[-1].var -> getAssembly();
+	string un3 = yyvsp[-1].var -> getUnique();
 
 	fprintf(parser, "%s[%s]\n\n", yyvsp[-3].var -> getName().c_str(), yyvsp[-1].var -> getName().c_str());
 	if(dec == v || dec == f) {
@@ -2078,36 +2299,52 @@ case 42:
 		fprintf(errorFile,"Error at Line %d : Non-integer Array Index  \n\n",lines);
 
 		errors++;
+		int i = myTable -> getScopeID(n1);
+		ostringstream a;
+		a<<i;
+		string s = a.str();
+		yyval.var -> setUnique(n1+s);
 	}
-	if(myTable -> lookUp(yyvsp[-3].var -> getName())==0){
+	if(myTable -> lookUp(n1)==0){
 		
 		fprintf(errorFile,"Error at Line %d : Undeclared variable : %s \n\n",lines, yyvsp[-3].var -> getName().c_str());
 		
 		errors++;
 	}
 
-	if(myTable -> lookUp(yyvsp[-3].var -> getName()) != 0){
-		if(myTable -> lookUp(yyvsp[-3].var -> getName()) -> getDeclaration() == fa) 
-			yyvsp[-3].var -> setDeclaration(f);
-		if(myTable -> lookUp(yyvsp[-3].var -> getName()) -> getDeclaration() != fa && myTable -> lookUp(yyvsp[-3].var -> getName()) -> getDeclaration() != ia){
+	if(myTable -> lookUp(n1) != 0){
+		if(myTable -> lookUp(n1) -> getDeclaration() != fa && myTable -> lookUp(n1) -> getDeclaration() != ia){
 			//cout << "Line No : "<< lines << " " << $<var>1 -> getName() << "  " << myTable -> lookUp($<var>1 -> getName()) -> getDeclaration() << endl;
 			fprintf(errorFile,"Error at Line %d : Type Mismatch \n\n",lines);
 			errors++;
 		}
-		string name1 = yyvsp[-3].var -> getName();
-		string dec1 = yyvsp[-3].var -> getDeclaration();
-		if(myTable -> lookUp(name1) -> getDeclaration() == ia) 
-			yyvsp[-3].var -> setDeclaration(i);	
-		yyval.var -> setDeclaration(dec1);
+		else
+		{
+			if(myTable -> lookUp(n1) -> getDeclaration() == fa) 
+				yyvsp[-3].var -> setDeclaration(f);
+		
+			string dec1 = yyvsp[-3].var -> getDeclaration();
+			if(myTable -> lookUp(n1) -> getDeclaration() == ia) 
+				yyvsp[-3].var -> setDeclaration(i);	
+			yyval.var -> setDeclaration(dec1);
+
+			string assembly = a3 + "\nMOV BX,"+un3+"\nADD BX,BX";
+			yyval.var -> setAssembly(assembly);
+			int i = myTable -> getScopeID(n1);
+			ostringstream a;
+			a<<i;
+			string s = a.str();
+			yyval.var -> setUnique(n1+s);
+		}
 	}
-	string n1 = yyvsp[-3].var -> getName();
-	string n3 = yyvsp[-1].var -> getName();
+	
 	yyval.var -> setName(n1 + "[" + n3 + "]");
+	yyval.var -> setType("array");
 
 ;
     break;}
 case 43:
-#line 760 "1605106.y"
+#line 997 "1605106.y"
 {
 	fprintf(parser, "At line no : %d expression : logic_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2116,10 +2353,14 @@ case 43:
 	string dec1 = yyvsp[0].var -> getDeclaration();
 	fprintf(parser, "%s\n\n", yyvsp[0].var -> getName().c_str());
 	yyval.var -> setDeclaration(dec1);
+	string un = yyvsp[0].var -> getUnique();
+	string assembly = yyvsp[0].var -> getAssembly();
+	yyval.var -> setUnique(un);
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 case 44:
-#line 769 "1605106.y"
+#line 1010 "1605106.y"
 {
 	fprintf(parser, "At line no : %d expression : variable ASSIGNOP logic_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2130,21 +2371,30 @@ case 44:
 	string n1 = yyvsp[-2].var -> getName();
 	string n3 = yyvsp[0].var -> getName();
 	string dec1 = yyvsp[-2].var -> getDeclaration();
-
+	string a1 = yyvsp[-2].var -> getAssembly();
+	string a3 = yyvsp[0].var -> getAssembly();
+	string un1 = yyvsp[-2].var -> getUnique();
+	string un3 = yyvsp[0].var -> getUnique();
+	string type1 = yyvsp[-2].var -> getType();
 	if(dec3 == v){
 		yyval.var -> setDeclaration(i);
-		
 		fprintf(errorFile,"Error at Line %d : Invalid declaration of variable\n\n",lines);
-		
 		errors++;
-		
 	}
-	else if(myTable -> lookUp(n1) != 0){
-		if(myTable -> lookUp(n1)-> getDeclaration() != dec3){
-			
+	else if (myTable -> lookUp(n1) != 0){
+		//cout <<"\nLine " << lines<< "  "<<dec1 << " " << dec3;
+		if(myTable -> lookUp(n1) -> getDeclaration() != dec3){
 			fprintf(errorFile,"Error at Line %d : Type Mismatch\n\n",lines);
-
 			errors++;
+		}
+		else {
+			string assembly = a1 + a3 + "\nMOV AX,"+un3+"\nMOV " + un1;
+			//cout << "Line "<<lines << "  " << un3 << endl;
+			//cout << "Line "<<lines << "  " << un1 << endl;
+			if(type1!="notarray") assembly = assembly + "[BX],AX";
+			else assembly = assembly + ",AX";
+			yyval.var -> setUnique(un1);
+			yyval.var -> setAssembly(assembly);
 		}
 	}
 	yyval.var -> setName(n1+"=" + n3);
@@ -2152,7 +2402,7 @@ case 44:
 ;
     break;}
 case 45:
-#line 801 "1605106.y"
+#line 1051 "1605106.y"
 {
 	fprintf(parser, "At line no : %d logic_expression : rel_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2161,34 +2411,53 @@ case 45:
 	yyval.var -> setDeclaration(dec1);
 	fprintf(parser, "%s\n\n", yyvsp[0].var->getName().c_str());
 	yyval.var -> setName(n1);
+	string un = yyvsp[0].var -> getUnique();
+	string assembly = yyvsp[0].var -> getAssembly();
+	yyval.var -> setUnique(un);
+	yyval.var -> setAssembly(assembly);
 
 ;
     break;}
 case 46:
-#line 811 "1605106.y"
+#line 1065 "1605106.y"
 {
 	fprintf(parser, "At line no : %d logic_expression : rel_expression LOGICOP rel_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
+	string a1 = yyvsp[-2].var -> getAssembly();
+	string a3 = yyvsp[0].var -> getAssembly();
+	string un1 = yyvsp[-2].var -> getUnique();
+	string un3 = yyvsp[0].var -> getUnique();
 	string i = "int ";
 	string v = "void ";
 	string dec1 = yyvsp[-2].var->getDeclaration();
 	string dec3 = yyvsp[0].var->getDeclaration();
 	fprintf(parser, "%s%s%s\n\n", yyvsp[-2].var->getName().c_str(), yyvsp[-1].var->getName().c_str(), yyvsp[0].var->getName().c_str());
+	string n2 = yyvsp[-1].var -> getName();
 	if(dec1 == v || dec3 == v) {
-		
 		fprintf(errorFile,"Error at Line %d : Type Mismatch\n\n",lines);
-
 		errors++;
+	}
+	else {
+		char *l1 = newLabel();
+		char *t = newTemp();
+		char *l2 = newLabel();
+		char *l3 = newLabel();
+		string assembly = a1 + a3;
+		if(n2 == "||") assembly = assembly + "\nMOV AX," + un1 + "\nCMP AX,0\nJNE "+string(l1)+"\nMOV AX,"+un3+"\nCMP AX,0\nJNE " + string(l1)+"\n"+string(l2)+":\nMOV "+string(t)+",0\nJMP "+string(l3)+"\n"+string(l1)+":\nMOV "+string(t)+",1\n"+string(l3)+":";
+		else assembly = assembly + "\nMOV AX," + un1 + "\nCMP AX,0\nJE "+string(l1)+"\nMOV AX,"+un3+"\nCMP AX,0\nJE " + string(l1)+"\n"+string(l2)+":\nMOV "+string(t)+",1\nJMP "+string(l3)+"\n"+string(l1)+":\nMOV "+string(t)+",0\n"+string(l3)+":";
+		//cout << "line " << lines << " " << string(l1) << " " << string(l2) << " " << string(l3);
+		yyval.var -> setUnique(t);
+		declaredVariables.push_back(t);
+		yyval.var -> setAssembly(assembly);
 	}
 	yyval.var -> setDeclaration(i);
 	string n1 = yyvsp[-2].var -> getName();
-	string n2 = yyvsp[-1].var -> getName();
 	string n3 = yyvsp[0].var -> getName();
 	yyval.var -> setName(n1 + n2 + n3);
 ;
     break;}
 case 47:
-#line 833 "1605106.y"
+#line 1102 "1605106.y"
 {
 	fprintf(parser, "At line no : %d rel_expression : simple_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2196,67 +2465,123 @@ case 47:
 	string dec1 = yyvsp[0].var ->getDeclaration();
 	yyval.var -> setDeclaration(dec1);
 	fprintf(parser, "%s\n\n", yyvsp[0].var->getName().c_str());
-	yyval.var -> setName(n1)
+	yyval.var -> setName(n1);
+	string un = yyvsp[0].var -> getUnique();
+	string assembly = yyvsp[0].var -> getAssembly();
+	yyval.var -> setUnique(un);
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 case 48:
-#line 842 "1605106.y"
+#line 1115 "1605106.y"
 {
 	fprintf(parser, "At line no : %d rel_expression : simple_expression RELOP simple_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
+	string un1 = yyvsp[-2].var -> getUnique();
+	string un3 = yyvsp[0].var -> getUnique();
 	string v = "void ";
 	string i = "int ";
 	string dec1 = yyvsp[-2].var->getDeclaration();
 	string dec3 = yyvsp[0].var->getDeclaration();
+	string name1 = yyvsp[-2].var -> getName();
+	string name2 = yyvsp[-1].var -> getName();
+	string name3 = yyvsp[0].var -> getName();
 	fprintf(parser, "%s%s%s\n\n", yyvsp[-2].var->getName().c_str(), yyvsp[-1].var->getName().c_str(), yyvsp[0].var->getName().c_str());
+	string a1 = yyvsp[-2].var -> getAssembly();
+	string a3 = yyvsp[0].var -> getAssembly();
 	if(dec1 == v || dec3 == v) {
-		
 		fprintf(errorFile,"Error at Line %d : Type Mismatch\n\n",lines);
-
 		errors++;
 	}
+	else {
+		char *l1 = newLabel();
+		char *t = newTemp();
+		char *l2 = newLabel();
+		string assembly = a1 + a3 + "\nMOV AX," +un1+"\nCMP AX,"+un3;
+		if(name2 == "==") assembly = assembly + "\nJE " + string(l1);
+		else if(name2 == "!=") assembly = assembly + "\nJNE " + string(l1);
+		else if(name2 == "<") assembly = assembly + "\nJL " + string(l1);
+		else if(name2 == "<=") assembly = assembly + "\nJLE " + string(l1);
+		else if(name2 == ">") assembly = assembly + "\nJG " + string(l1);
+		else if(name2 == ">=") assembly = assembly + "\nJGE " + string(l1);
+		assembly = assembly + "\nMOV " + string(t) + ",0\nJMP " + string(l2) + "\n" + string(l1) + ":\nMOV " + string(t) + ",1\n" + string(l2) + ":";
+		//cout << "line " << lines << " " << string(l1) << " " << string(l2);
+		yyval.var -> setUnique(t);
+		declaredVariables.push_back(t);
+		yyval.var -> setAssembly(assembly); 
+	}
 	yyval.var -> setDeclaration(i);
-	yyval.var -> setName(yyvsp[-2].var -> getName()+ yyvsp[-1].var->getName()+ yyvsp[0].var->getName().c_str());
+	yyval.var -> setName(name1+ name2+ name3);
 ;
     break;}
 case 49:
-#line 861 "1605106.y"
+#line 1156 "1605106.y"
 {
 	fprintf(parser, "At line no : %d simple_expression : term\n\n", lines);
 	yyval.var = new SymbolInfo();
-
 	yyval.var -> setName(yyvsp[0].var -> getName());
-	
 	yyval.var -> setDeclaration(yyvsp[0].var ->getDeclaration());
-
 	fprintf(parser, "%s\n\n", yyvsp[0].var->getName().c_str());
+	string un = yyvsp[0].var -> getUnique();
+	string assembly = yyvsp[0].var -> getAssembly();
+	yyval.var -> setUnique(un);
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 case 50:
-#line 871 "1605106.y"
+#line 1167 "1605106.y"
 {
 	fprintf(parser, "At line no : %d simple_expression : simple_expression ADDOP term\n\n", lines);
 	yyval.var = new SymbolInfo();
+	string a1 = yyvsp[-2].var -> getAssembly();
+	string a3 = yyvsp[0].var -> getAssembly();
+	string un1 = yyvsp[-2].var -> getUnique();
+	string un3 = yyvsp[0].var -> getUnique();
 	fprintf(parser, "%s%s%s\n\n", yyvsp[-2].var->getName().c_str(), yyvsp[-1].var->getName().c_str(), yyvsp[0].var->getName().c_str());
 	string dec3 = yyvsp[0].var->getDeclaration();
 	string dec1 = yyvsp[-2].var->getDeclaration();
 	string f = "float ";
 	string v = "void ";
 	string i = "int ";
+	string name1 = yyvsp[-2].var -> getName();
+	string name2 = yyvsp[-1].var -> getName();
+	string name3 = yyvsp[0].var -> getName();
 	if(dec3 == f || dec1 == f ) {
 		yyval.var -> setDeclaration(f);
+		char *t = newTemp();
+		string assembly = a1 + a3 + "\nMOV AX," + un1;
+		if(name2=="+"){
+			assembly = assembly + "\nADD AX," + un3;
+		}
+		else assembly = assembly + "\nSUB AX," + un3;
+		assembly = assembly +"\nMOV " + string(t) + ",AX";
+		declaredVariables.push_back(t);
+		yyval.var -> setUnique(t);
+		yyval.var -> setAssembly(assembly);
 	}
 	else if(yyvsp[0].var->getDeclaration() == v || yyvsp[-2].var->getDeclaration() == v) {
 		yyval.var -> setDeclaration(i);
 		fprintf(errorFile,"Error at Line %d : Type Mismatch\n\n",lines);
 		errors++;
 	}
-	else yyval.var -> setDeclaration(i);
+	else {
+		yyval.var -> setDeclaration(i);
+		char *t = newTemp();
+		string assembly = a1 + a3 + "\nMOV AX," + un1;
+		if(name2=="+"){
+			assembly = assembly + "\nADD AX," + un3;
+		}
+		else assembly = assembly + "\nSUB AX," + un3;
+		assembly = assembly +"\nMOV " + string(t) + ",AX";
+		declaredVariables.push_back(t);
+		yyval.var -> setUnique(t);
+		yyval.var -> setAssembly(assembly);
+	}
 	yyval.var -> setName(yyvsp[-2].var -> getName()+ yyvsp[-1].var->getName()+ yyvsp[0].var->getName().c_str());
 ;
     break;}
 case 51:
-#line 893 "1605106.y"
+#line 1218 "1605106.y"
 {
 	fprintf(parser, "At line no : %d term : unary_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2265,53 +2590,93 @@ case 51:
 	yyval.var -> setName(name1);
 	fprintf(parser, "%s\n\n", yyvsp[0].var->getName().c_str());
 	yyval.var -> setDeclaration(dec);
+	string un = yyvsp[0].var -> getUnique();
+	yyval.var -> setUnique(un);
+	string assembly = yyvsp[0].var -> getAssembly();
+	yyval.var -> setAssembly(assembly);
 	
 ;
     break;}
 case 52:
-#line 903 "1605106.y"
+#line 1232 "1605106.y"
 {
 	fprintf(parser, "At line no : %d term : term MULOP unary_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
+	string a1 = yyvsp[-2].var -> getAssembly();
+	string a3 = yyvsp[0].var -> getAssembly();
+	string un1 = yyvsp[-2].var -> getUnique();
+	string un3 = yyvsp[0].var -> getUnique();
 	string v = "void ";
 	string i = "int ";
 	string f = "float ";
 	string dec1 = yyvsp[-2].var->getDeclaration();
 	string dec3 = yyvsp[0].var->getDeclaration();
+	string name2 = yyvsp[-1].var -> getName();
 	fprintf(parser, "%s%s%s\n\n", yyvsp[-2].var->getName().c_str(), yyvsp[-1].var->getName().c_str(), yyvsp[0].var->getName().c_str());
 	if(dec1 == v || dec3 == v) {
 		yyval.var -> setDeclaration(i);
 		fprintf(errorFile,"Error at Line %d : Type Mismatch\n\n",lines);
 		errors++;
 	}
-	else if(yyvsp[-1].var -> getName() == "/"){
-		if(dec1 == i && dec3 == i)
+	else if(name2 == "/"){
+		if(dec1 == i && dec3 == i) {
 			yyval.var -> setDeclaration(i);
+			char *t = newTemp();
+			string assembly = a1 + a3 + "\nMOV AX," + un1 + "\nMOV BX," + un3 + "\nDIV BX\nMOV " + string(t) + ",AX";
+			declaredVariables.push_back(t);
+			yyval.var -> setUnique(t);
+			yyval.var -> setAssembly(assembly);
+		}
 		else if(dec1 == v || dec3 == v){
 			yyval.var -> setDeclaration(i);
 			fprintf(errorFile, "Error at Line %d : Type Mismatch\n\n", lines);
 			errors++;
 		}
-		else yyval.var -> setDeclaration(f);
+		else {
+			yyval.var -> setDeclaration(f);
+			char *t = newTemp();
+			string assembly = a1 + a3 + "\nMOV AX," + un1 + "\nMOV BX," + un3 + "\nDIV BX\nMOV " + string(t) + ",AX";
+			declaredVariables.push_back(t);
+			yyval.var -> setUnique(t);
+			yyval.var -> setAssembly(assembly);
+		}
 	}
-	else if(yyvsp[-1].var -> getName() == "%"){
+	else if(name2 == "%"){
 		if(dec1 != i || dec3 != i) {
-			
 			fprintf(errorFile,"Error at Line %d : Integer operand on modulus operator\n\n",lines);
-
 			errors++;
 		}
-		yyval.var -> setDeclaration(i);
+		else {
+			yyval.var -> setDeclaration(i);
+		}
+		char *t = newTemp();
+		string assembly = a1 + a3 + "\nMOV AX," + un1 + "\nMOV BX," + un3 + "\nMOV DX,0\nDIV BX\nMOV " + string(t) + ",DX";
+		declaredVariables.push_back(t);
+		yyval.var -> setUnique(t);
+		yyval.var -> setAssembly(assembly);
 	}
 	else {
-		if(dec1 == f || dec3 == f)
+		if(dec1 == f || dec3 == f){
 			yyval.var -> setDeclaration(f);
+			char *t = newTemp();
+			string assembly = a1 + a3 + "\nMOV AX," + un1 + "\nMOV BX," + un3 + "\nMUL BX\nMOV " + string(t) + ",AX";
+			declaredVariables.push_back(t);
+			yyval.var -> setUnique(t);
+			yyval.var -> setAssembly(assembly);
+		}
 		else if(dec1 == v || dec3 == v){
 			yyval.var -> setDeclaration(i);
 			fprintf(errorFile, "Error at Line %d : Type Mismatch\n\n", lines);
 			errors++;
 		}
-		else yyval.var -> setDeclaration(i);
+		else {
+			yyval.var -> setDeclaration(i);
+			char *t = newTemp();
+			string assembly = a1 + a3 + "\nMOV AX," + un1 + "\nMOV BX," + un3 + "\nMUL BX\nMOV " + string(t) + ",AX";
+			declaredVariables.push_back(t);
+			yyval.var -> setUnique(t);
+			yyval.var -> setAssembly(assembly);
+		}
 	}
 	string str1 = yyvsp[-2].var -> getName();
 	string str2 = yyvsp[-1].var->getName();
@@ -2321,7 +2686,7 @@ case 52:
 ;
     break;}
 case 53:
-#line 954 "1605106.y"
+#line 1319 "1605106.y"
 {
 	fprintf(parser, "At line no : %d unary_expression : ADDOP unary_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2329,55 +2694,58 @@ case 53:
 	string i = "int ";
 	string f = "float ";
 	string dec2 = yyvsp[0].var -> getDeclaration();
-
+	string str1 = yyvsp[-1].var -> getName();
+	string str2 = yyvsp[0].var -> getName();
 	fprintf(parser, "%s%s\n\n", yyvsp[-1].var->getName().c_str(), yyvsp[0].var->getName().c_str());
 	if(dec2 == v){
-		
 		yyval.var -> setDeclaration(i);
-		
 		fprintf(errorFile,"Error at Line %d : Type Mismatch\n\n",lines);
-
 		errors++;
-		
 	}
 	else {
 		string dec2 = yyvsp[0].var -> getDeclaration();
 		yyval.var -> setDeclaration(dec2);
+		string assembly = "";
+		assembly = yyvsp[0].var -> getAssembly();
+		string un = yyvsp[0].var -> getUnique();
+		if(str1 == "-") {
+			assembly = assembly + "\nMOV AX," + un + "\nNEG AX\nMOV " + un + ",AX";
+		}
+		yyval.var -> setUnique(un);
+		yyval.var -> setAssembly(assembly);
 	}
-	string str1 = yyvsp[-1].var -> getName();
-	string str2 = yyvsp[0].var -> getName();
 	yyval.var -> setName(str1+ str2);
-
 ;
     break;}
 case 54:
-#line 981 "1605106.y"
+#line 1348 "1605106.y"
 {
 	fprintf(parser, "At line no : %d unary_expression : NOT unary_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
 	fprintf(parser, "!%s\n\n",yyvsp[0].var->getName().c_str());
-
 	string v = "void ";
 	string i = "int ";
 	string dec2 = yyvsp[0].var -> getDeclaration();
 	string n2 = yyvsp[0].var->getName();
 	if(dec2 == v){
 		yyval.var -> setDeclaration(i);
-
-		
 		fprintf(errorFile,"Error at Line %d : Type Mismatch\n\n",lines);
-
 		errors++;
-		
 	}
 	else {
 		yyval.var -> setDeclaration(dec2);
+		string assembly = "";
+		assembly = yyvsp[0].var -> getAssembly();
+		string un = yyvsp[0].var -> getUnique();
+		assembly = assembly + "\nMOV AX," + un + "\nNOT AX\nMOV " + un + ",AX";
+		yyval.var -> setUnique(un);
+		yyval.var -> setAssembly(assembly);
 	}
 	yyval.var -> setName("!"+ n2);
 ;
     break;}
 case 55:
-#line 1004 "1605106.y"
+#line 1372 "1605106.y"
 {
 	fprintf(parser, "At line no : %d unary_expression : factor\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2386,10 +2754,14 @@ case 55:
 	fprintf(parser, "%s\n\n",yyvsp[0].var->getName().c_str());
 	string dec1 = yyvsp[0].var -> getDeclaration();
 	yyval.var -> setDeclaration(dec1);
+	string un = yyvsp[0].var -> getUnique();
+	yyval.var -> setUnique(un);
+	string assembly = yyvsp[0].var -> getAssembly();
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 case 56:
-#line 1014 "1605106.y"
+#line 1386 "1605106.y"
 {
 	fprintf(parser, "At line no : %d factor : variable\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2398,10 +2770,26 @@ case 56:
 	fprintf(parser, "%s\n\n",yyvsp[0].var->getName().c_str());
 	string dec1 = yyvsp[0].var -> getDeclaration();
 	yyval.var -> setDeclaration(dec1);
+	string type = yyval.var -> getType();
+	string assembly = yyvsp[0].var -> getAssembly();
+	string un = yyvsp[0].var -> getUnique();
+	if(type != "array"){
+		yyval.var -> setUnique(un);
+	}
+	else {
+		char *t = newTemp();
+		assembly = assembly + "\nMOV AX," + un + "[BX]\nMOV " + string(t) + ",AX";
+		yyval.var -> setUnique(t);
+		declaredVariables.push_back(t);
+	}
+
+	yyval.var -> setAssembly(assembly);
+
+
 ;
     break;}
 case 57:
-#line 1023 "1605106.y"
+#line 1411 "1605106.y"
 {
 	fprintf(parser, "At line no : %d factor : ID LPAREN argument_list RPAREN\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2409,6 +2797,7 @@ case 57:
 	fprintf(parser, "%s(%s)\n\n",yyvsp[-3].var->getName().c_str(), yyvsp[-1].var->getName().c_str());
 	string variableName = yyvsp[-3].var->getName();
 	SymbolInfo *temp = myTable -> lookUp(variableName);
+	string assembly = yyvsp[-1].var -> getAssembly();
 	//cout << $<var>1->getName()<< endl;
 	//cout << temp->getMethod() -> getTotalParameters() << endl;
 	if(temp == 0){
@@ -2440,13 +2829,27 @@ case 57:
 		else{
 			vector<string> pt = temp -> getMethod() -> getParameterType();
 			int argSize = arguments.size();
+			vector<string> pl = temp -> getMethod() -> getParameterList();
+			vector<string> lv = temp -> getMethod() -> getListOfVariable();
 			for(int i=0; i < argSize; i++){
+				//cout << argSize << endl;
+				string un = arguments[i] -> getUnique();
+				//cout << arguments[i] << " " << arguments[i]-> getName() << " " <<un << endl;
+				//cout << "Name : " << arguments[i] -> getName() << endl;
+				assembly = assembly + "\nMOV AX," + un + "\nMOV " + pl[i] + ",AX";
+				//cout << "Line " << lines << " " << un << endl;
 				if(arguments[i]->getDeclaration()!=pt[i]){
 					fprintf(errorFile,"Error at Line %d : Type Mismatch\n\n",lines);
 					errors++;
 					break;
 				}
 			}
+			char *t = newTemp();
+			assembly = assembly + "\nCALL " + variableName + "\nMOV AX," + variableName + "_return\nMOV " + string(t) + ",AX";
+			declaredVariables.push_back(t);
+			yyval.var -> setUnique(t);
+			yyval.var -> setAssembly(assembly);
+			
 		}
 	}
 	arguments.clear();
@@ -2454,7 +2857,7 @@ case 57:
 ;
     break;}
 case 58:
-#line 1073 "1605106.y"
+#line 1476 "1605106.y"
 {
 	fprintf(parser, "At line no : %d factor : LPAREN expression RPAREN\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2463,10 +2866,14 @@ case 58:
 	fprintf(parser, "(%s)\n\n",yyvsp[-1].var->getName().c_str());
 	string dec2 = yyvsp[-1].var -> getDeclaration();
 	yyval.var -> setDeclaration(dec2);
+	string un = yyvsp[-1].var -> getUnique();
+	yyval.var -> setUnique(un);
+	string assembly = yyvsp[-1].var -> getAssembly();
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 case 59:
-#line 1082 "1605106.y"
+#line 1489 "1605106.y"
 {
 	fprintf(parser, "At line no : %d factor : CONST_INT\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2475,10 +2882,17 @@ case 59:
 	yyval.var -> setName(var1);
 	fprintf(parser, "%s\n\n",yyvsp[0].var->getName().c_str());
 	yyval.var -> setDeclaration(i);
+	char *t = newTemp();
+	string assembly = "\nMOV " + string(t) + "," + var1;
+	declaredVariables.push_back(t);
+	//cout << "line " << lines << " " << $<var>$ -> getName() << " "<< string(t) << endl;
+	yyval.var -> setUnique(string(t));
+	//cout << "line " << lines << " " <<$<var>$ << "  "<< $<var>$ -> getName() << " "<< $<var>$ -> getUnique() << endl;
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 case 60:
-#line 1091 "1605106.y"
+#line 1505 "1605106.y"
 {
 	fprintf(parser, "At line no : %d factor : CONST_FLOAT\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2487,10 +2901,16 @@ case 60:
 	yyval.var -> setName(var1);
 	fprintf(parser, "%s\n\n",yyvsp[0].var->getName().c_str());
 	yyval.var -> setDeclaration(f);
+	char *t = newTemp();
+	string assembly = "\nMOV " + string(t) + "," + var1;
+	declaredVariables.push_back(t);
+	yyval.var -> setUnique(string(t));
+	yyval.var -> setAssembly(assembly);
+	
 ;
     break;}
 case 61:
-#line 1100 "1605106.y"
+#line 1520 "1605106.y"
 {
 	fprintf(parser, "At line no : %d factor : variable INCOP\n\n", lines);
 	yyval.var = new SymbolInfo();	
@@ -2499,10 +2919,31 @@ case 61:
 	fprintf(parser, "%s\n\n",yyvsp[-1].var->getName().c_str());
 	string dec1 = yyvsp[-1].var -> getDeclaration();
 	yyval.var -> setDeclaration(dec1);
+	char *t = newTemp();
+	string type1 = yyvsp[-1].var -> getType();
+	string assembly = "";
+	string un = yyvsp[-1].var -> getUnique();
+	if(type1!="array"){
+		assembly = assembly + "\nMOV AX," + un;
+	}
+	else {
+		assembly = assembly + "\nMOV AX," + un + "[BX]";
+	}
+	assembly = assembly + "\nMOV "+string(t) + ",AX";
+	if(type1!="array"){
+		assembly = assembly + "\nINC " + un;
+	}
+	else{
+		assembly = assembly + "\nMOV AX," + un + "[BX]\nINC AX\nMOV " + un + "[BX],AX"; 
+	}
+	
+	declaredVariables.push_back(t);
+	yyval.var -> setUnique(t);
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 case 62:
-#line 1109 "1605106.y"
+#line 1550 "1605106.y"
 {
 	fprintf(parser, "At line no : %d factor : variable DECOP\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2511,20 +2952,42 @@ case 62:
 	fprintf(parser, "%s\n\n",yyvsp[-1].var->getName().c_str());
 	string dec1 = yyvsp[-1].var -> getDeclaration();
 	yyval.var -> setDeclaration(dec1);
+	char *t = newTemp();
+	string type1 = yyvsp[-1].var -> getType();
+	string assembly = "";
+	string un = yyvsp[-1].var -> getUnique();
+	if(type1!="array"){
+		assembly = assembly + "\nMOV AX," + un;
+	}
+	else {
+		assembly = assembly + "\nMOV AX," + un + "[BX]";
+	}
+	assembly = assembly + "\nMOV "+string(t) + ",AX";
+	if(type1!="array"){
+		assembly = assembly + "\nDEC " + un;
+	}
+	else{
+		assembly = assembly + "\nMOV AX," + un + "[BX]\nDEC AX\nMOV " + un + "[BX],AX"; 
+	}
+	declaredVariables.push_back(t);
+	yyval.var -> setUnique(t);
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 case 63:
-#line 1121 "1605106.y"
+#line 1582 "1605106.y"
 {
 	fprintf(parser, "At line no : %d argument_list : arguments\n\n", lines);
 	yyval.var = new SymbolInfo();
 	string var1 = yyvsp[0].var->getName();
 	yyval.var -> setName(var1);
 	fprintf(parser, "%s\n\n",yyvsp[0].var->getName().c_str());
+	string assembly = yyvsp[0].var -> getAssembly();
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 case 64:
-#line 1128 "1605106.y"
+#line 1591 "1605106.y"
 {
 	fprintf(parser, "At line no : %d argument_list : \n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2532,7 +2995,7 @@ case 64:
 ;
     break;}
 case 65:
-#line 1135 "1605106.y"
+#line 1598 "1605106.y"
 {
 	fprintf(parser, "At line no : %d arguments : arguments COMMA logic_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
@@ -2540,19 +3003,25 @@ case 65:
 	arguments.push_back(yyvsp[0].var);
 	string setter = yyvsp[-2].var->getName()+ "," + yyvsp[0].var->getName();
 	yyval.var -> setName(setter);
+	string assembly = yyvsp[-2].var -> getAssembly()+yyvsp[0].var -> getAssembly();
+	yyval.var -> setAssembly(assembly);
+
 ;
     break;}
 case 66:
-#line 1143 "1605106.y"
+#line 1609 "1605106.y"
 {
 	fprintf(parser, "At line no : %d arguments : logic_expression\n\n", lines);
 	yyval.var = new SymbolInfo();
 	fprintf(parser, "%s\n\n",yyvsp[0].var->getName().c_str());
 	string n1 = yyvsp[0].var->getName();
-	string type1 = yyvsp[0].var->getType();
-	string dec1 = yyvsp[0].var->getDeclaration();
+	//string type1 = $<var>1->getType();
+	//string dec1 = $<var>1->getDeclaration();
 	yyval.var -> setName(n1);
-	arguments.push_back(new SymbolInfo(n1, type1, dec1));
+	//arguments.push_back(new SymbolInfo(n1, type1, dec1));
+	arguments.push_back(yyvsp[0].var);
+	string assembly = yyvsp[0].var -> getAssembly();
+	yyval.var -> setAssembly(assembly);
 ;
     break;}
 }
@@ -2759,7 +3228,83 @@ YYLABEL(yyerrhandle)
 /* END */
 
  #line 1038 "/usr/share/bison++/bison.cc"
-#line 1154 "1605106.y"
+#line 1623 "1605106.y"
+
+
+
+bool checkAssembly(string str1, string str2){
+	if(str1 == str2){
+		cout << "Same Line" << endl;
+		return true;
+	}
+	string dest1 = "";
+	string dest2 = "";
+	string src1 = "";
+	string src2 = "";
+	if(str1[0]=='M' && str1[1]=='O' && str1[2] == 'V'){
+		//cout << "Str1 MOV " << endl;
+		if(str2[0]=='M' && str2[1]=='O' && str2[2] == 'V'){
+			//cout << "Str2 MOV " << endl;
+			int i = 4;
+			for(; i<str1.size(); i++){
+				if(str1[i]==' ' || str1[i] == ',') break;
+				dest1 = dest1 + str1[i]; 
+			}
+			for(int j = i+1; j<str1.size(); j++){
+				if(str1[j] == ' ' || str1[j] == '\n') break;
+				src1 = src1 + str1[j];
+			}
+			int k = 4;
+			for(; k<str2.size(); k++){
+				if(str2[k]==' ' || str2[k] == ',') break;
+				dest2 = dest2 + str2[k]; 
+			}
+			for(int m = k+1; m<str2.size(); m++){
+				if(str2[m] == ' ' || str2[m] == '\n') break;
+				src2 = src2 + str2[m];
+			}
+			if(src1==dest2 && src2==dest1) {
+				//cout <<  " Src1 = " << src1 << " Dest1 = " << dest1 << " Src2 = " << src2 << " Dest2 = " << dest2 << endl;
+				//cout << " Found " << endl;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
+void optimize(FILE *code){
+	FILE *optimized = fopen("optcode.asm", "w");
+	vector<string> vect;
+	ssize_t temp;
+	size_t size;
+	char *str = NULL;
+	while((temp = getline(&str, &size, code))!=-1){
+		vect.push_back(string(str));
+	}
+	bool array[vect.size()];
+	for(int i = 0; i < vect.size(); i++){
+		array[i] = true;
+	}
+	for(int i = 0; i < vect.size()-1; i++){
+		bool b = checkAssembly(vect[i], vect[i+1]);
+		if(b){
+			array[i+1] = false;
+		}
+	}
+	for(int i = 0; i < vect.size(); i++){
+		if(array[i]){
+			fprintf(optimized, "%s", vect[i].c_str());
+		}
+	}
+	fclose(code);
+	fclose(optimized);
+	if(str) free(str);
+}
+
+
+
 
 
 int main(int argc,char *argv[])
@@ -2769,9 +3314,10 @@ int main(int argc,char *argv[])
 	yyin=fp;
 	myTable -> enterScope(20);
 	yyparse();
-	fprintf(parser, "SymbolTable : ");
-	myTable -> printAllST(parser);
+	//fprintf(parser, "SymbolTable : ");
+	//myTable -> printAllST(parser);
 	fprintf(parser, "Total lines : %d\n",lines);
+	fprintf(errorFile, "Total lines : %d\n",lines);
 	fprintf(errorFile, "Total errors : %d", errors);
 	fprintf(parser, "Total errors : %d", errors);
 	fclose(fp);

@@ -18,7 +18,8 @@ private:
     string type;
     Method *method;
     string declaration;
-
+    string assembly;
+    string unique;
 
 
 public:
@@ -75,6 +76,22 @@ public:
 
     void setMethod(){
             method = new Method();
+    }
+
+    string getAssembly(){
+        return this->assembly;
+    }
+
+    void setAssembly(string assembly){
+        this->assembly = assembly;
+    }
+
+    string getUnique(){
+        return unique;
+    }
+
+    void setUnique(string unique){
+        this -> unique = unique;
     }
 
 

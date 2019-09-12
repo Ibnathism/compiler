@@ -1,22 +1,19 @@
-int x,y,z; float a;
-
-void foo();
-
-int var(int a, int b){
-	return a+b;
+int f(int a){
+    return 2*a;
+    a=9;
 }
 
-void foo(){
-	x=2;
-	y=x-5;
+int g(int a, int b){
+    int x;
+    x=f(a)+a+b;
+    return x;
 }
 
 int main(){
-	int a[2],c,i,j ; float d;
-	a[0]=1;
-	a[1]=5;
-	i= a[0]+a[1];
-	j= 2*3+(5%3 < 4 && 8) || 2 ;
-	d=var(1,2*3)+3.5*2;
-	return 0;
+    int a,b;
+    a=1;
+    b=2;
+    a=g(a,b);
+    println(a);
+    return 0;
 }

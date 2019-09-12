@@ -36,12 +36,13 @@ bool insert(const string &name, const string &type, const string &declaration){
 }
 
 void enterScope(const int &size) {
+    //int id;
+    //if (temp!=nullptr) id = currentScopeID +1 ;
+    //else id = 1;
+    //currentScopeID = id;
+    currentScopeID++;
     ScopeTable* temp = currentScope;
-    int id;
-    if (temp!=nullptr) id = currentScopeID +1 ;
-    else id = 1;
-    currentScopeID = id;
-    auto* newScope = new ScopeTable(id, size);
+    auto* newScope = new ScopeTable(currentScopeID, size);
     newScope->parentScope = temp;
     currentScope = newScope;
     if (currentScope->tableId!=1)
@@ -80,6 +81,17 @@ bool insert(SymbolInfo &s) {
 bool remove(string name) {
     bool isRemoved = currentScope->deleteEntry(name);
     return isRemoved;
+}
+
+int getScopeID(string name){
+    ScopeTable *s = currentScope;
+    while(s){
+        if(s->lookUp(name)){
+            return s->tableId;
+        }
+        s = s->parentScope;
+    }
+    return -1;
 }
 
 /*SymbolInfo* lookUp(string name) {
